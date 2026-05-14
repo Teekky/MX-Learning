@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===================================================================
+   Theme palettes
+   ===================================================================
+   The app supports two themes: dark (the original, on `<html class="dark">`)
+   and light (the default with no class). Both palettes are exposed as RGB
+   triplets so Tailwind's `<alpha-value>` machinery stays compatible
+   (e.g. `bg-accent/40`, `text-text-muted/60`).
+
+   The class is applied early in src/main.tsx (before React renders) to
+   avoid a flash of unthemed content, and kept in sync with `settings.theme`
+   by App.tsx.
+   ================================================================= */
+
+:root {
+  /* Light theme (default — no class on <html>). */
+  --color-bg: 247 247 250;
+  --color-bg-elevated: 255 255 255;
+  --color-bg-subtle: 238 240 244;
+  --color-border: 216 216 224;
+  --color-border-subtle: 231 231 236;
+  --color-text: 21 21 27;
+  --color-text-muted: 90 90 110;
+  --color-text-subtle: 138 138 158;
+  --color-accent: 108 76 240;
+  --color-accent-hover: 90 60 224;
+  --color-success: 37 160 107;
+  --color-warning: 217 119 6;
+  --color-danger: 220 38 38;
+  color-scheme: light;
+}
+
+:root.dark {
+  /* Dark theme — the original MX Learning palette. */
+  --color-bg: 11 11 15;
+  --color-bg-elevated: 21 21 27;
+  --color-bg-subtle: 28 28 36;
+  --color-border: 42 42 53;
+  --color-border-subtle: 31 31 41;
+  --color-text: 231 231 238;
+  --color-text-muted: 154 154 174;
+  --color-text-subtle: 107 107 128;
+  --color-accent: 124 92 255;
+  --color-accent-hover: 142 114 255;
+  --color-success: 61 220 151;
+  --color-warning: 255 184 77;
+  --color-danger: 255 107 107;
+  color-scheme: dark;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-text font-sans antialiased;
+    margin: 0;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Subtle scrollbar — Apple-like */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-subtle;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-accent-subtle text-text;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 font-medium text-white shadow-lg shadow-accent/20 transition-all hover:bg-accent-hover hover:shadow-accent/30 active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-bg-elevated px-5 py-2.5 font-medium text-text transition-all hover:border-text-subtle hover:bg-bg-subtle active:scale-[0.98];
+  }
+
+  /* The card shadow uses `--color-shadow` so it stays subtle on light bg
+     and dramatic on dark bg without needing a separate utility class. */
+  .card {
+    @apply rounded-2xl border border-border bg-bg-elevated p-6;
+    box-shadow: 0 12px 32px rgb(var(--color-shadow) / var(--card-shadow-opacity));
+  }
+
+  .input {
+    @apply rounded-lg border border-border bg-bg-subtle px-3 py-2 text-sm text-text outline-none transition-colors placeholder:text-text-subtle focus:border-accent focus:bg-bg-elevated;
+  }
+}
+
+/* Card shadow tokens — different intensities per theme so the elevation
+   feels right in both. Defaults are tuned for light; dark overrides below. */
+:root {
+  --color-shadow: 17 17 30;
+  --card-shadow-opacity: 0.10;
+}
+
+:root.dark {
+  --color-shadow: 0 0 0;
+  --card-shadow-opacity: 0.25;
+}
