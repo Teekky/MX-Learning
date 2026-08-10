@@ -27,32 +27,64 @@ only register in a **secure context**. Browsers count `https://` and
 So the LAN URL is fine for glancing at the app on the phone, and it will never
 offer to install. Two ways around that, both free:
 
-### A. Trust the LAN address in Chrome (no cable)
+### A. Install over Wi-Fi, by machine name (no cable, no router config)
 
-If you can already reach `http://192.168.x.x:4173` from the phone, this is
-the shortest path. Chrome has an allowlist for exactly this case.
+The shortest path, and the one that survives.
 
-1. Phone Chrome → `chrome://flags`
-2. Search **Insecure origins treated as secure**, set it to *Enabled*.
-3. In its text box, put the exact origin, port included:
-   `http://192.168.1.173:4173`
-4. **Relaunch** Chrome when prompted.
-5. Load the address again → menu ⋮ → **Add to Home screen** → Install.
+**Use the computer's mDNS name, not its IP.** Windows answers to
+`<hostname>.local` on the local network, and that name does not change when
+the router hands out a different address. Find it with `hostname` in a
+terminal; here it is `Teekky`, so the address is `http://teekky.local:4173`.
 
-The flag lowers the bar for that one origin and nothing else. Chrome keeps it
-until you clear it.
+This matters more than it sounds. A browser files everything a site stores —
+the service worker cache *and* the IndexedDB holding your deck — under the
+site's **origin**, which is scheme + host + port. Install from
+`http://192.168.1.173:4173` and that address is baked in. The day DHCP hands
+your machine `.174`, the installed app points at an origin that no longer
+exists: not corrupted, but unreachable, with a fresh empty database at the
+new address. The `.local` name sidesteps the whole problem without touching
+the router.
 
-One real catch: **the origin is the IP address.** If your router hands the
-computer a different address later, the installed app points at an origin
-that no longer exists, and its cache and its IndexedDB are stranded there —
-a new IP is a new origin, with a new empty database. Reserve a static lease
-for the computer in your router before installing this way, or use the cable
-route below, where the origin is always `localhost:4173`.
+Steps:
 
-### B. USB port forwarding (stable origin)
+1. On the computer: `npm run phone` (leave it running).
+2. Phone Chrome → open `http://teekky.local:4173` to check the name
+   resolves. If it loads, continue. If it does not, Android is not
+   resolving mDNS on your network — fall back to route B.
+3. Phone Chrome → `chrome://flags`
+4. Search **Insecure origins treated as secure**, set the dropdown to
+   *Enabled*.
+5. In its text box, type the origin exactly, port included:
+   `http://teekky.local:4173`
+6. Tap **Relaunch** — the blue button that appears at the bottom of the
+   flags page. This only restarts Chrome so the setting takes effect. It
+   installs nothing.
+7. Load `http://teekky.local:4173` again → menu ⋮ → **Add to Home screen**
+   → Install.
+
+The flag lowers the security bar for that one origin and nothing else, and
+`.local` names cannot be resolved from outside your network.
+
+Vite refuses unfamiliar `Host` headers with a 403 by default; `.local` is
+allowlisted in `vite.config.ts` (`preview.allowedHosts`) so this works.
+
+### B. USB port forwarding (fallback)
 
 Chrome makes the phone see your machine's port as `localhost`, which *is* a
 secure context and never changes. One-time setup.
+
+**Before anything else, check the cable.** The phone must appear in the
+computer's Device Manager as an Android/Samsung device. If Windows cannot
+see it, Chrome never will, and no amount of fiddling with `chrome://inspect`
+will help. The usual culprits, in order of how often they are the answer:
+
+- The cable is charge-only. Plenty of USB cables have no data wires at all.
+  Try the one that came with the phone.
+- The phone's USB mode is set to *Charging only*. Pull down the
+  notification shade after plugging in and switch it to *File transfer*.
+- The *Allow USB debugging?* dialog was dismissed, or *Always allow from
+  this computer* was never ticked. Unplug, replug, watch the phone screen.
+- In `chrome://inspect/#devices`, **Discover USB devices** is unticked.
 
 1. Phone → Settings → **About phone** → **Software information** → tap
    **Build number** seven times.

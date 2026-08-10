@@ -122,6 +122,8 @@ export default defineConfig(({ mode }) => {
     port: isDemo ? 5174 : 5173,
     strictPort: false,
     open: false,
+    // Same reasoning as `preview.allowedHosts` below.
+    allowedHosts: ['.local'],
     // Proxy Mistral API to avoid CORS in the browser PWA.
     // The SDK is pointed at /api/mistral; Vite forwards to api.mistral.ai.
     proxy: {
@@ -134,6 +136,21 @@ export default defineConfig(({ mode }) => {
   },
   preview: {
     port: isDemo ? 4174 : 4173,
+    /**
+     * Allow the machine's mDNS name (`something.local`) as a Host header.
+     *
+     * Reaching the dev machine from a phone by name rather than by IP is
+     * what makes a home-screen install survive: the browser files all of a
+     * site's data under its origin, and an origin built from a DHCP address
+     * dies the day the router hands out a different one. The `.local` name
+     * does not change.
+     *
+     * Vite rejects unknown Host headers with a 403 by default — a sensible
+     * defence against DNS rebinding. A `.local` suffix cannot be resolved
+     * from outside the LAN, so allowing it does not widen the exposure
+     * beyond the `--host` flag you already had to pass.
+     */
+    allowedHosts: ['.local'],
   },
   }
 })
