@@ -27,6 +27,35 @@ npm run dev
 AI features need a Mistral key in `.env.local` — copy `.env.example`. Without
 one, everything except the AI practice modes still works.
 
+## Working from two computers
+
+Use git, not a folder copy. `node_modules/` alone is tens of thousands of
+files — copying it is slow, and a dependency tree built for one machine is
+not guaranteed to run on another.
+
+On the second machine:
+
+```bash
+git clone https://github.com/teekky/mx-learning.git
+cd mx-learning
+npm install --legacy-peer-deps
+```
+
+Then each time you switch machines: `git push` before you leave, `git pull`
+when you arrive.
+
+Two things git will **not** carry, by design:
+
+- **`.env.local`** — it is gitignored, because an API key does not belong in
+  a repository. Copy it across by hand once, or recreate it from
+  `.env.example`.
+- **Your deck.** The database lives in the browser profile, not in the
+  repo. Settings → Backup & restore → *Download a backup* on one machine,
+  import it on the other.
+
+`--legacy-peer-deps` is required: `vite-plugin-pwa@1.2.0` has not declared
+Vite 8 as a supported peer yet. It works; the metadata is just stale.
+
 ## Does updating the app lose my data?
 
 No. This is worth stating precisely, because "it's all in the browser" sounds

@@ -3,15 +3,20 @@
 The goal: open the app from the home screen, review for five minutes, offline,
 with progress that belongs to the phone.
 
-## The one-liner
+## The one-liner — on the computer
 
 ```bash
 npm run phone
 ```
 
-Builds the app, serves it, and prints both ways to reach it from the phone.
-Add `--demo` (or `npm run phone:demo`) to serve the demo database instead of
-your real deck.
+**This runs on your computer, not on the phone.** There is no terminal on
+Android; the phone is only the client. The command builds the app and turns
+your computer into the server the phone connects to, then prints the two ways
+to reach it. Leave the terminal open for the whole install.
+
+It serves your **real** deck by default — that is what you want on the phone.
+`npm run phone:demo` exists only for checking the interface on a device
+without touching real data; never install from it.
 
 ## Why you cannot just type the IP address
 

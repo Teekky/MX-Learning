@@ -1,6 +1,10 @@
 /**
  * Serve the built app to your phone — `npm run phone`.
  *
+ * RUN THIS ON YOUR COMPUTER, not on the phone. There is no Node, no npm and
+ * no terminal on the phone; the phone is only ever the *client* here. This
+ * script turns your computer into the server the phone connects to.
+ *
  * Flags:
  *   --demo    build and serve the demo database instead of the real one
  *   --skip-build  reuse whatever is already in dist/
@@ -99,6 +103,9 @@ setTimeout(() => {
   console.log(bold('─'.repeat(64)))
   console.log(bold(`  MX Learning — ${demo ? 'DEMO data' : 'REAL data'}`))
   console.log(bold('─'.repeat(64)))
+  console.log(
+    dim('\n  This terminal stays open. Everything below happens on the PHONE.\n'),
+  )
 
   console.log('\n' + bold('  Just to look at it') + dim('  (same Wi-Fi, no install)'))
   if (addrs.length === 0) {
