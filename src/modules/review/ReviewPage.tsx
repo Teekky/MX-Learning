@@ -402,11 +402,11 @@ export function ReviewPage() {
                   aria-keyshortcuts={g.digit}
                   className={[
                     'press no-select flex min-h-[64px] flex-col items-center justify-center gap-0.5',
-                    'rounded-lg border-ink px-1 shadow-sm',
+                    'rounded-lg border-hair px-1',
                     g.className,
                   ].join(' ')}
                 >
-                  <span className="font-display text-sm font-semibold">{g.label}</span>
+                  <span className="text-sm font-semibold">{g.label}</span>
                   <span className="font-mono text-2xs tabular-nums opacity-75">
                     {intervals?.[g.key]}
                   </span>

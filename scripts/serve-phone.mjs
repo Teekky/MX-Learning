@@ -27,11 +27,13 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const PORT = 4173
 
 const args = process.argv.slice(2)
 const demo = args.includes('--demo')
 const skipBuild = args.includes('--skip-build')
+
+// Matches vite.config.ts: the two environments never share a port.
+const PORT = demo ? 4174 : 4173
 
 /* ------------------------------------------------------------------ */
 

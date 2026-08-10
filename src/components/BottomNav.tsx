@@ -60,11 +60,11 @@ export function BottomNav({
           }
           className="press relative -mt-5 flex w-16 shrink-0 flex-col items-center justify-center"
         >
-          <span className="flex h-14 w-14 items-center justify-center rounded-full border-ink border-stroke bg-accent text-on-accent shadow-md">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-on-accent shadow-md">
             <Zap size={24} />
           </span>
           {dueCount != null && dueCount > 0 && (
-            <span className="absolute -right-0.5 top-0 min-w-[22px] rounded-full border-hair border-stroke bg-bg-elevated px-1.5 py-0.5 text-center font-mono text-2xs font-semibold tabular-nums text-text">
+            <span className="absolute -right-0.5 top-0 min-w-[22px] rounded-full border-hair border-border bg-bg-elevated px-1.5 py-0.5 text-center font-mono text-2xs font-semibold tabular-nums text-text">
               {dueCount > 99 ? '99+' : dueCount}
             </span>
           )}

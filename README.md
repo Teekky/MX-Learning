@@ -16,8 +16,8 @@ npm run dev
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Dev server against your real deck (`mx-learning`) |
-| `npm run dev:demo` | Dev server against the demo deck (`mx-learning-demo`) |
+| `npm run dev` | **Port 5173** — your real deck (`mx-learning`) |
+| `npm run dev:demo` | **Port 5174** — the demo deck (`mx-learning-demo`) |
 | `npm run build` | Production build |
 | `npm run build:demo` | Staging build |
 | `npm run phone` | Build + serve to your phone, with install instructions |
@@ -27,14 +27,46 @@ npm run dev
 AI features need a Mistral key in `.env.local` — copy `.env.example`. Without
 one, everything except the AI practice modes still works.
 
+## Does updating the app lose my data?
+
+No. This is worth stating precisely, because "it's all in the browser" sounds
+fragile and mostly isn't.
+
+Your data lives in **IndexedDB**, keyed by origin and database name. Shipping
+new code replaces HTML, JavaScript and CSS. None of that touches IndexedDB.
+Rebuild, redeploy, reinstall the PWA, update the service worker — the deck,
+the schedule, the streak and the history all survive.
+
+Three things *can* lose data, and only three:
+
+1. **Clearing site data** in the browser (or uninstalling the browser
+   profile). Nothing in the app can prevent this — that's what the automatic
+   snapshots and the export are for.
+2. **A destructive schema migration.** Dexie versions are declared in
+   `src/db/database.ts`. Every version so far is additive: v2 only adds an
+   index. A migration that dropped or rewrote a table would be a deliberate
+   act, and should ship with an export prompt in front of it.
+3. **Changing the database name.** `mx-learning` → anything else means a
+   fresh, empty database. That is exactly the mechanism staging uses, and it
+   is why the name is a build constant rather than something computed at
+   runtime.
+
+Updates are also not silent: the service worker downloads a new build in the
+background and then waits behind a banner. Nothing reloads mid-review.
+
+**Rules for future schema changes.** Bump the Dexie version, only ever *add*
+tables/indexes/optional fields, and write an `upgrade()` for anything that
+transforms existing rows. Never lower a version number, and never rename the
+database.
+
 ## Two databases, never one
 
 The app opens a different IndexedDB database depending on the build:
 
-| Build | Database |
-| --- | --- |
-| default | `mx-learning` |
-| `--mode demo` | `mx-learning-demo` |
+| Build | Database | Dev port |
+| --- | --- | --- |
+| default | `mx-learning` | 5173 |
+| `--mode demo` | `mx-learning-demo` | 5174 |
 
 A demo build physically cannot read or write the real deck — IndexedDB
 isolates by database name, and the name is fixed at build time in

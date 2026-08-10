@@ -41,7 +41,7 @@ export function TopBar() {
                 <span className="font-mono text-2xs uppercase tracking-wider text-text-subtle">
                   {lvl.name}
                 </span>
-                <span className="truncate font-display text-sm font-semibold text-text">
+                <span className="truncate text-sm font-semibold text-text">
                   Level {lvl.level + 1}
                   <span className="ml-1.5 font-sans font-normal tabular-nums text-text-muted">
                     {stats!.xp.toLocaleString()}
@@ -78,7 +78,7 @@ export function TopBar() {
               animate={{ opacity: 1, scale: 1 }}
               className={`rounded-full border-hair px-3 py-1 font-mono text-xs font-semibold ${
                 combo.multiplierActive
-                  ? 'border-stroke bg-accent text-on-accent shadow-xs'
+                  ? 'border-transparent bg-accent text-on-accent'
                   : 'border-border bg-bg-subtle text-text-muted'
               }`}
             >

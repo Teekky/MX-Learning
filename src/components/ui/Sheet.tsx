@@ -95,7 +95,7 @@ export function Sheet({
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="absolute inset-0 bg-stroke/50 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-text/40 backdrop-blur-[2px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -112,7 +112,7 @@ export function Sheet({
             transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
               'relative flex max-h-[92dvh] w-full flex-col overflow-hidden',
-              'rounded-t-2xl border-ink border-stroke bg-bg-elevated shadow-float',
+              'rounded-t-2xl border-hair border-border bg-bg-elevated shadow-float',
               'sm:max-w-lg sm:rounded-2xl',
               className,
             )}

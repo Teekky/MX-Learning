@@ -105,8 +105,8 @@ export function EmptyState({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        'flex flex-col items-center rounded-xl border-ink border-stroke bg-bg-elevated',
-        'px-6 py-10 text-center shadow-md',
+        'flex flex-col items-center rounded-xl border-hair border-ink bg-bg-elevated',
+        'px-6 py-10 text-center',
         className,
       )}
     >
@@ -114,7 +114,7 @@ export function EmptyState({
         <div
           className={cn(
             'mb-4 flex h-14 w-14 items-center justify-center rounded-full',
-            'border-ink border-stroke bg-accent-subtle text-2xl text-accent',
+            'border-hair border-border bg-accent-subtle text-2xl text-accent',
           )}
           aria-hidden
         >
@@ -156,7 +156,7 @@ export function ErrorState({
   return (
     <div
       role="alert"
-      className="rounded-xl border-ink border-danger bg-danger/8 px-6 py-8 text-center"
+      className="rounded-xl border-hair border-danger/50 bg-danger/8 px-6 py-8 text-center"
     >
       <h3 className="font-display text-lg font-semibold text-text">{title}</h3>
       {body && <p className="mx-auto mt-2 max-w-sm text-sm text-text-muted">{body}</p>}

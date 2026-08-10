@@ -14,7 +14,8 @@ export type CardWeight = 'plain' | 'ink' | 'sunken'
 
 const WEIGHT: Record<CardWeight, string> = {
   plain: 'border-hair border-border bg-bg-elevated',
-  ink: 'border-ink border-stroke bg-bg-elevated shadow-md',
+  /* One step up, by line weight rather than elevation. */
+  ink: 'border-hair border-ink bg-bg-elevated',
   /* Recessed well — for content that belongs *inside* another surface. */
   sunken: 'border-hair border-border-subtle bg-bg-subtle',
 }

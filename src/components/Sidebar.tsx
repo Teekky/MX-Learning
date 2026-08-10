@@ -52,13 +52,16 @@ export function Sidebar({ collapsed, onToggle, mobileToggleLabel }: Props) {
       initial={false}
       animate={{ width: collapsed ? COLLAPSED_W : EXPANDED_W }}
       transition={{ type: 'spring', stiffness: 300, damping: 34 }}
-      className="flex h-[100dvh] shrink-0 flex-col overflow-hidden border-r-hair border-border bg-bg-elevated px-3 py-5"
+      /* `sticky top-0` keeps the nav in place while the page scrolls. Without
+         it the sidebar is just a very tall column that scrolls away with
+         everything else, which is what it was doing. */
+      className="sticky top-0 flex h-[100dvh] shrink-0 flex-col overflow-y-auto border-r-hair border-border bg-bg-elevated px-3 py-5"
       style={{ paddingTop: 'calc(var(--space-5) + var(--safe-top))' }}
     >
       {/* --- Brand ----------------------------------------------------- */}
       <div className="mb-6 flex h-10 items-center gap-3 px-1">
         <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-ink border-stroke bg-accent shadow-sm"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent"
           aria-hidden
         >
           <span className="font-display text-base font-semibold text-on-accent">M</span>
@@ -81,7 +84,7 @@ export function Sidebar({ collapsed, onToggle, mobileToggleLabel }: Props) {
       <NavLink
         to="/review"
         title={collapsed ? 'Review' : undefined}
-        className="press mb-5 flex min-h-tap items-center gap-3 rounded-lg border-ink border-stroke bg-accent px-3 font-semibold text-on-accent shadow-md"
+        className="press mb-5 flex min-h-tap items-center gap-3 rounded-lg bg-accent px-3 font-semibold text-on-accent"
       >
         <Zap size={20} className="shrink-0" />
         {!collapsed && <span className="whitespace-nowrap">Review</span>}

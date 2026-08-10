@@ -25,7 +25,7 @@ const TONE: Record<BadgeTone, string> = {
   success: 'border-transparent bg-success/12 text-success',
   warning: 'border-transparent bg-warning/12 text-warning',
   danger: 'border-transparent bg-danger/12 text-danger',
-  outline: 'border-stroke bg-transparent text-text-muted',
+  outline: 'border-border bg-transparent text-text-muted',
 }
 
 export interface BadgeProps {

@@ -23,6 +23,7 @@ import {
 } from '@/ai/imageDescribe'
 import { useAppStore } from '@/store/useAppStore'
 import { recordReview } from '@/utils/dailyLog'
+import { Key, KeyHint } from '@/components/ui'
 
 const MAX_XP_PER_IMAGE = 20
 
@@ -354,21 +355,25 @@ export function ImageDescriptionSession() {
             className="input w-full resize-none text-base"
           />
 
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-text-subtle">
-              {state.grade
-                ? 'Try another image to keep practising.'
-                : 'Cmd/Ctrl + Enter to submit.'}
-            </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {state.grade ? (
-              <button onClick={loadRandom} className="btn-primary">
+              <p className="text-xs text-text-subtle">
+                Try another image to keep practising.
+              </p>
+            ) : (
+              <KeyHint className="mt-0 text-left">
+                <Key>Cmd</Key>/<Key>Ctrl</Key> + <Key>Enter</Key> to submit.
+              </KeyHint>
+            )}
+            {state.grade ? (
+              <button onClick={loadRandom} className="btn-primary w-full sm:w-auto">
                 Next image →
               </button>
             ) : (
               <button
                 onClick={submit}
                 disabled={!canSubmit}
-                className="btn-primary disabled:opacity-40"
+                className="btn-primary w-full disabled:opacity-40 sm:w-auto"
               >
                 {state.grading ? 'Grading…' : 'Submit'}
               </button>

@@ -31,16 +31,18 @@
   --color-text-muted: 92 83 76; /* #5C534C */
   --color-text-subtle: 140 128 120; /* #8C8078 */
 
-  /* Lines. `border` is the everyday warm hairline; `ink-line` is the
-     deliberate brutalist stroke used by cards, buttons and the review
-     card — the thing that gives the UI its edge. */
-  --color-border: 217 207 194; /* #D9CFC2 */
-  --color-border-subtle: 233 225 215; /* #E9E1D7 */
-  --color-ink-line: 26 22 20; /* #1A1614 — same as text, on purpose */
+  /* Lines. `border` is the everyday hairline; `ink-line` is one step
+     stronger, for surfaces that need a little more definition. Neither is
+     a hard black stroke — outlines that heavy fight with the text. */
+  --color-border: 221 212 200; /* #DDD4C8 */
+  --color-border-subtle: 236 229 220; /* #ECE5DC */
+  --color-ink-line: 196 184 169; /* #C4B8A9 */
 
-  /* Accent — cobalt. `on-accent` is what stays readable on top of it. */
-  --color-accent: 27 77 255; /* #1B4DFF */
-  --color-accent-hover: 11 57 214; /* #0B39D6 */
+  /* Accent — a deep, desaturated blue. The earlier electric cobalt was
+     too loud on a cream ground: at full saturation it vibrates against
+     the warm background and is genuinely tiring to read next to. */
+  --color-accent: 48 76 166; /* #304CA6 */
+  --color-accent-hover: 38 61 133; /* #263D85 */
   --color-on-accent: 255 255 255;
 
   /* Semantics. Sage / amber / terracotta, tuned for contrast on paper. */
@@ -51,12 +53,12 @@
   /* Grading scale for the review screen — one colour per answer button. */
   --color-grade-again: 193 74 42; /* terracotta */
   --color-grade-hard: 176 106 16; /* amber */
-  --color-grade-good: 27 77 255; /* cobalt */
+  --color-grade-good: 48 76 166; /* accent blue */
   --color-grade-easy: 34 138 92; /* sage */
 
-  /* Shadow ink + strength. Hard offset, zero blur — see --shadow-* below. */
-  --shadow-color: 26 22 20;
-  --shadow-strength: 0.18;
+  /* Shadow ink + strength — see --shadow-* below. */
+  --shadow-color: 42 34 28;
+  --shadow-strength: 1;
 
   color-scheme: light;
 }
@@ -76,12 +78,13 @@
 
   --color-border: 58 51 48; /* #3A3330 */
   --color-border-subtle: 42 37 35; /* #2A2523 */
-  /* On a dark ground the "ink" stroke has to be lighter than the surface,
-     otherwise the brutalist edge disappears entirely. */
-  --color-ink-line: 96 86 79; /* #60564F */
+  /* On a dark ground the stronger line has to be lighter than the surface,
+     otherwise it disappears entirely. */
+  --color-ink-line: 82 73 67; /* #524943 */
 
-  --color-accent: 110 140 255; /* #6E8CFF */
-  --color-accent-hover: 140 163 255; /* #8CA3FF */
+  /* Softened to match the light theme's calmer accent. */
+  --color-accent: 134 157 234; /* #869DEA */
+  --color-accent-hover: 157 177 240; /* #9DB1F0 */
   --color-on-accent: 15 14 13;
 
   --color-success: 79 194 140; /* #4FC28C */
@@ -90,11 +93,11 @@
 
   --color-grade-again: 255 131 96;
   --color-grade-hard: 255 196 107;
-  --color-grade-good: 110 140 255;
+  --color-grade-good: 134 157 234;
   --color-grade-easy: 79 194 140;
 
   --shadow-color: 0 0 0;
-  --shadow-strength: 0.55;
+  --shadow-strength: 2.4;
 
   color-scheme: dark;
 }
@@ -126,6 +129,11 @@
   --text-3xl: 2.375rem; /* 38px */
   --text-4xl: 3rem; /* 48px — the review card's word */
   --text-5xl: 3.75rem; /* 60px */
+
+  /* Card-title size, fluid between the phone and the desktop: 18px on a
+     narrow screen, settling at 22px from roughly 1000px up. Fixed sizes
+     would either be cramped on the S22 or oversized in a 3-column grid. */
+  --text-tile: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);
 
   --tracking-tight: -0.02em;
   --tracking-display: -0.03em;
@@ -166,19 +174,25 @@
 }
 
 /* ------------------------------------------------------------------ */
-/*  Elevation — hard offsets, no blur                                  */
+/*  Elevation                                                          */
 /* ------------------------------------------------------------------ */
 
+/* Soft, diffuse, and used sparingly. An earlier revision used hard offset
+   shadows on every button; they made ordinary controls shout. Elevation
+   now means "this floats above the page" — a sheet, a toast, a menu — and
+   nothing else. Flat elements are separated by a hairline border instead.
+
+   `--shadow-strength` is a multiplier, so the dark theme can deepen every
+   step at once without redefining them. */
 :root {
-  --shadow-xs: 2px 2px 0 rgb(var(--shadow-color) / var(--shadow-strength));
-  --shadow-sm: 3px 3px 0 rgb(var(--shadow-color) / var(--shadow-strength));
-  --shadow-md: 4px 4px 0 rgb(var(--shadow-color) / var(--shadow-strength));
-  --shadow-lg: 6px 6px 0 rgb(var(--shadow-color) / var(--shadow-strength));
-  --shadow-xl: 10px 10px 0 rgb(var(--shadow-color) / var(--shadow-strength));
-  /* Pressed state: the element sinks into its own shadow. */
+  --shadow-xs: 0 1px 2px rgb(var(--shadow-color) / calc(0.05 * var(--shadow-strength)));
+  --shadow-sm: 0 2px 6px -1px rgb(var(--shadow-color) / calc(0.07 * var(--shadow-strength)));
+  --shadow-md: 0 6px 16px -6px rgb(var(--shadow-color) / calc(0.10 * var(--shadow-strength)));
+  --shadow-lg: 0 12px 28px -10px rgb(var(--shadow-color) / calc(0.13 * var(--shadow-strength)));
+  --shadow-xl: 0 24px 48px -16px rgb(var(--shadow-color) / calc(0.16 * var(--shadow-strength)));
   --shadow-none: 0 0 0 rgb(var(--shadow-color) / 0);
-  /* The one soft shadow we allow, for floating sheets over content. */
-  --shadow-float: 0 18px 48px -12px rgb(var(--shadow-color) / 0.35);
+  /* Sheets and toasts sitting over the whole page. */
+  --shadow-float: 0 18px 48px -12px rgb(var(--shadow-color) / calc(0.20 * var(--shadow-strength)));
 }
 
 /* ------------------------------------------------------------------ */

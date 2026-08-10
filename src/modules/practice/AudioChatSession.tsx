@@ -21,6 +21,7 @@ import { recordReview } from '@/utils/dailyLog'
 import { useAppStore } from '@/store/useAppStore'
 import { isSTTSupported, startRecognition, type STTHandle } from '@/audio/stt'
 import { speak, stopSpeaking } from '@/audio/tts'
+import { KeyHint } from '@/components/ui'
 
 const XP_PER_MESSAGE = 4
 const XP_CLEAN_BONUS = 3
@@ -393,14 +394,17 @@ export function AudioChatSession() {
         {state.sending && <TypingDots />}
       </div>
 
-      {/* Composer: mic + editable draft + send */}
-      <div className="mt-4 flex items-start gap-3">
+      {/* Composer: mic + editable draft + send.
+          `flex-wrap` plus an explicit basis puts the mic and the field on the
+          first line and drops Send onto its own full-width row on a phone,
+          while keeping all three inline from `sm` up. */}
+      <div className="mt-4 flex flex-wrap items-start gap-3">
         <MicButton
           listening={state.mic === 'listening'}
           disabled={state.sending}
           onToggle={toggleMic}
         />
-        <div className="flex-1">
+        <div className="min-w-0 basis-[calc(100%-3.75rem)] sm:flex-1 sm:basis-auto">
           <textarea
             ref={draftRef}
             value={state.draft}
@@ -424,18 +428,22 @@ export function AudioChatSession() {
             disabled={state.sending}
             className="input w-full resize-none text-base"
           />
-          <p className="mt-1 text-[11px] text-text-subtle">
-            {state.permissionDenied
-              ? 'Microphone access denied — enable it in browser settings.'
-              : state.mic === 'listening'
+          {state.permissionDenied ? (
+            <p className="mt-1 text-xs text-warning">
+              Microphone access denied — enable it in browser settings.
+            </p>
+          ) : (
+            <KeyHint className="mt-1 text-left">
+              {state.mic === 'listening'
                 ? 'Listening — press Space to stop, Enter to send.'
                 : 'Press Space to toggle the mic · Enter to send.'}
-          </p>
+            </KeyHint>
+          )}
         </div>
         <button
           onClick={send}
           disabled={!canSend}
-          className="btn-primary self-start disabled:opacity-40"
+          className="btn-primary w-full self-start disabled:opacity-40 sm:w-auto"
         >
           Send
         </button>

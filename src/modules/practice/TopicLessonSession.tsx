@@ -22,6 +22,7 @@ import { allowedLevelsFor } from '@/utils/levelFilter'
 import { shuffled } from '@/utils/shuffle'
 import { playBuzz, playDing, vibrate } from '@/audio/sfx'
 import type { Level } from '@/types'
+import { Key, KeyHint } from '@/components/ui'
 
 const LEVEL_ORDER: Record<Level, number> = {
   A1: 0,
@@ -509,7 +510,7 @@ function ReadPanel({
         <div className="space-y-2">
           {topic.examples.map((ex, i) => (
             <div key={i} className="card space-y-1 py-3">
-              <p className="font-display text-base text-text">{ex.en}</p>
+              <p className="text-base text-text">{ex.en}</p>
               {ex.fr && <p className="text-sm text-accent">{ex.fr}</p>}
               {ex.note && (
                 <p className="text-xs italic text-text-subtle">{ex.note}</p>
@@ -634,7 +635,7 @@ function ChoiceCard({
       <div>
         <p className="font-display text-lg text-text">{prompt}</p>
         {promptFr && (
-          <p className="mt-1 font-display text-base text-accent">{promptFr}</p>
+          <p className="mt-1 text-base text-accent">{promptFr}</p>
         )}
       </div>
       <div className="flex flex-col gap-2">
@@ -736,18 +737,18 @@ function FillCard({
         {after}
       </p>
       {promptFr && (
-        <p className="font-display text-base text-accent">{promptFr}</p>
+        <p className="text-base text-accent">{promptFr}</p>
       )}
       {!revealed && (
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-text-subtle">
-            Press Enter or click Submit.
-          </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <KeyHint className="mt-0 text-left">
+            Press <Key>Enter</Key> or click Submit.
+          </KeyHint>
           <button
             type="button"
             onClick={commit}
             disabled={draft.trim().length === 0}
-            className="btn-ghost text-sm disabled:opacity-40"
+            className="btn-ghost w-full disabled:opacity-40 sm:w-auto"
           >
             Submit
           </button>

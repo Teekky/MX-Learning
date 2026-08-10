@@ -40,7 +40,7 @@ export const GRADES: readonly Grade[] = [
     hint: 'No idea',
     quality: 1,
     digit: '1',
-    className: 'border-stroke bg-grade-again/12 text-grade-again hover:bg-grade-again/20',
+    className: 'border-grade-again/35 bg-grade-again/10 text-grade-again hover:bg-grade-again/18',
     overlayClassName: 'bg-grade-again text-on-accent',
   },
   {
@@ -49,7 +49,7 @@ export const GRADES: readonly Grade[] = [
     hint: 'Struggled',
     quality: 3,
     digit: '2',
-    className: 'border-stroke bg-grade-hard/12 text-grade-hard hover:bg-grade-hard/20',
+    className: 'border-grade-hard/35 bg-grade-hard/10 text-grade-hard hover:bg-grade-hard/18',
     overlayClassName: 'bg-grade-hard text-on-accent',
   },
   {
@@ -58,7 +58,7 @@ export const GRADES: readonly Grade[] = [
     hint: 'Recalled',
     quality: 4,
     digit: '3',
-    className: 'border-stroke bg-grade-good/12 text-grade-good hover:bg-grade-good/20',
+    className: 'border-grade-good/35 bg-grade-good/10 text-grade-good hover:bg-grade-good/18',
     overlayClassName: 'bg-grade-good text-on-accent',
   },
   {
@@ -67,7 +67,7 @@ export const GRADES: readonly Grade[] = [
     hint: 'Instant',
     quality: 5,
     digit: '4',
-    className: 'border-stroke bg-grade-easy/12 text-grade-easy hover:bg-grade-easy/20',
+    className: 'border-grade-easy/35 bg-grade-easy/10 text-grade-easy hover:bg-grade-easy/18',
     overlayClassName: 'bg-grade-easy text-on-accent',
   },
 ]

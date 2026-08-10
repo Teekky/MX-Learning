@@ -99,14 +99,14 @@ export function ReviewCard({
       {/* --- Swipe intent overlays ------------------------------------- */}
       <motion.div
         style={{ opacity: againOpacity }}
-        className={`pointer-events-none absolute left-4 top-6 z-10 rotate-[-8deg] rounded-lg border-ink border-stroke px-3 py-1 font-display text-lg font-semibold shadow-sm ${SWIPE_LEFT.overlayClassName}`}
+        className={`pointer-events-none absolute left-4 top-6 z-10 rotate-[-8deg] rounded-lg px-3 py-1 font-display text-lg font-semibold shadow-sm ${SWIPE_LEFT.overlayClassName}`}
         aria-hidden
       >
         {SWIPE_LEFT.label}
       </motion.div>
       <motion.div
         style={{ opacity: goodOpacity }}
-        className={`pointer-events-none absolute right-4 top-6 z-10 rotate-[8deg] rounded-lg border-ink border-stroke px-3 py-1 font-display text-lg font-semibold shadow-sm ${SWIPE_RIGHT.overlayClassName}`}
+        className={`pointer-events-none absolute right-4 top-6 z-10 rotate-[8deg] rounded-lg px-3 py-1 font-display text-lg font-semibold shadow-sm ${SWIPE_RIGHT.overlayClassName}`}
         aria-hidden
       >
         {SWIPE_RIGHT.label}
@@ -121,8 +121,8 @@ export function ReviewCard({
       <div
         onClick={revealed ? undefined : onReveal}
         className={[
-          'no-select flex w-full flex-col items-center rounded-2xl border-ink border-stroke',
-          'bg-bg-elevated px-6 py-10 text-center shadow-lg',
+          'no-select flex w-full flex-col items-center rounded-2xl border-hair border-ink',
+          'bg-bg-elevated px-6 py-10 text-center shadow-md',
           revealed ? 'cursor-default' : 'cursor-pointer',
         ].join(' ')}
       >
@@ -187,7 +187,7 @@ export function ReviewCard({
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
               transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-              className="mb-6 h-0 origin-center border-t-ink border-dashed border-border"
+              className="mb-6 h-0 origin-center border-t-hair border-dashed border-border"
             />
 
             {/* ---- Verso ---- */}

@@ -235,7 +235,7 @@ function Chip({
       className={cn(
         'press rounded-full border-hair px-3 py-2 text-sm font-medium capitalize',
         active
-          ? 'border-stroke bg-accent text-on-accent'
+          ? 'border-transparent bg-accent text-on-accent'
           : 'border-border bg-bg-elevated text-text-muted hover:text-text',
       )}
     >
@@ -313,7 +313,7 @@ function IdiomRow({
               onClick={onAdd}
               disabled={busy}
               aria-label={`Add “${item.lemma}” to your deck`}
-              className="press flex h-tap w-tap items-center justify-center rounded-full border-ink border-stroke bg-accent text-on-accent shadow-sm disabled:opacity-50"
+              className="press flex h-tap w-tap items-center justify-center rounded-full bg-accent text-on-accent disabled:opacity-50"
             >
               <Plus size={18} />
             </button>

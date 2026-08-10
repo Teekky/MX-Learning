@@ -28,6 +28,7 @@ import { speak } from '@/audio/tts'
 import { playBuzz, playDing, vibrate } from '@/audio/sfx'
 import { EmptyDeckNotice } from './EmptyDeckNotice'
 import type { Review } from '@/types'
+import { Key, KeyHint } from '@/components/ui'
 
 const MAX_CARDS_PER_SESSION = 8
 
@@ -380,14 +381,14 @@ export function WordsInContextSession() {
               </p>
             )}
 
-            <div className="flex gap-3">
+            <div className="answer-row">
               <input
                 ref={inputRef}
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 readOnly={!!submitted}
                 placeholder="Type the missing word…"
-                className={`input flex-1 text-lg ${submitted ? 'opacity-70' : ''}`}
+                className={`input text-lg ${submitted ? 'opacity-70' : ''}`}
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck={false}
@@ -428,10 +429,9 @@ export function WordsInContextSession() {
         )}
       </div>
 
-      <p className="mt-4 text-center text-xs text-text-subtle">
-        Press <kbd className="rounded bg-bg-subtle px-1.5 py-0.5">Enter</kbd> to
-        {submitted ? ' continue' : ' submit'}.
-      </p>
+      <KeyHint>
+        Press <Key>Enter</Key> to{submitted ? ' continue' : ' submit'}.
+      </KeyHint>
     </motion.div>
   )
 }

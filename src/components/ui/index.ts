@@ -13,6 +13,7 @@ export type { CardProps, CardWeight } from './Card'
 export { Badge, LevelBadge, RegisterBadge, VariantBadge } from './Badge'
 export type { BadgeProps, BadgeTone } from './Badge'
 export { Field, Input, Select, Textarea } from './Input'
+export { Key, KeyHint } from './KeyHint'
 export type { FieldProps, InputProps, SelectProps, TextareaProps } from './Input'
 export {
   EmptyState,

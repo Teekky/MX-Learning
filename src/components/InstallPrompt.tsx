@@ -98,7 +98,7 @@ export function InstallPrompt() {
         bottom: 'calc(var(--bottom-nav-h) + var(--safe-bottom) + var(--space-3))',
       }}
     >
-      <div className="mx-auto flex max-w-lg items-center gap-3 rounded-xl border-ink border-stroke bg-bg-elevated p-4 shadow-lg">
+      <div className="mx-auto flex max-w-lg items-center gap-3 rounded-xl border-hair border-border bg-bg-elevated p-4 shadow-float">
         <div className="min-w-0 flex-1">
           <p className="font-display text-base font-semibold text-text">
             Put this on your home screen

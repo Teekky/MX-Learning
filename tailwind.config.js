@@ -72,6 +72,8 @@ export default {
         '3xl': ['var(--text-3xl)', { lineHeight: '1.12' }],
         '4xl': ['var(--text-4xl)', { lineHeight: '1.05' }],
         '5xl': ['var(--text-5xl)', { lineHeight: '1' }],
+        /* Fluid card-title size — see --text-tile in tokens.css. */
+        tile: ['var(--text-tile)', { lineHeight: '1.25' }],
       },
 
       letterSpacing: {

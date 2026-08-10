@@ -45,7 +45,7 @@ export function Stat({
       className={cn(
         'flex flex-col rounded-xl p-4',
         emphasis
-          ? 'border-ink border-stroke bg-bg-elevated shadow-md'
+          ? 'border-hair border-ink bg-bg-elevated'
           : 'border-hair border-border bg-bg-elevated',
         className,
       )}

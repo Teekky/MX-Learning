@@ -31,7 +31,12 @@
 
   /* The display face carries the app's voice: a soft, slightly wonky slab.
      Applied via `font-display`, with the variation axes set here so every
-     use gets the same character. */
+     use gets the same character.
+
+     Reserve it for headings, brand marks, and single words or numbers you
+     read at a glance. Anything you actually *read* — sentences, examples,
+     definitions, form copy — stays in Inter, which is quieter and holds up
+     far better at paragraph length. */
   .font-display {
     font-variation-settings: var(--display-variation);
     letter-spacing: var(--tracking-display);
@@ -68,37 +73,37 @@
   /* ---------------------------------------------------------------- */
   /*  Press physics                                                   */
   /* ---------------------------------------------------------------- */
-  /* The signature interaction: a pressed element slides into its own hard
-     shadow. Composited (transform + box-shadow only), so it stays smooth
-     at 120 Hz. */
+  /* A pressed element gives slightly under the finger. One composited
+     transform, nothing else — no shadow to animate, no layout to redo. */
   .press {
-    @apply transition-[transform,box-shadow] duration-fast ease-out;
+    @apply transition-transform duration-fast ease-out;
     will-change: transform;
   }
   .press:active {
-    transform: translate3d(2px, 2px, 0);
-    box-shadow: var(--shadow-xs);
+    transform: scale(0.98);
   }
 
   /* ---------------------------------------------------------------- */
   /*  Buttons                                                          */
   /* ---------------------------------------------------------------- */
-  /* `border-ink` is the 2px stroke *width*; `border-stroke` is its colour. */
+  /* Flat: a fill or a hairline, never a drop shadow. Buttons appear
+     several times per screen, and giving each one its own elevation made
+     ordinary controls compete with the content they act on. */
   .btn-base {
     @apply press no-select inline-flex min-h-tap items-center justify-center
-           gap-2 rounded-lg border-ink border-stroke px-5 text-sm font-semibold
-           disabled:pointer-events-none disabled:opacity-40;
+           gap-2 rounded-lg border-hair border-transparent px-5 text-sm
+           font-semibold disabled:pointer-events-none disabled:opacity-40;
   }
 
   .btn-primary {
-    @apply btn-base bg-accent text-on-accent shadow-md hover:bg-accent-hover;
+    @apply btn-base bg-accent text-on-accent hover:bg-accent-hover;
   }
 
   .btn-ghost {
-    @apply btn-base bg-bg-elevated text-text shadow-md hover:bg-bg-subtle;
+    @apply btn-base border-border bg-bg-elevated text-text hover:bg-bg-subtle;
   }
 
-  /* Tertiary: no border, no shadow — for low-stakes inline actions. */
+  /* Tertiary: no border, no fill — for low-stakes inline actions. */
   .btn-quiet {
     @apply inline-flex min-h-tap items-center justify-center gap-2 rounded-lg
            px-4 text-sm font-medium text-text-muted
@@ -106,7 +111,7 @@
   }
 
   .btn-danger {
-    @apply btn-base bg-danger text-on-accent shadow-md;
+    @apply btn-base bg-danger text-on-accent;
   }
 
   /* ---------------------------------------------------------------- */
@@ -118,17 +123,17 @@
     @apply rounded-xl border-hair border-border bg-bg-elevated p-6;
   }
 
-  /* The statement surface — ink stroke plus hard offset. Reserve it for
-     things that matter: the review card, primary stat tiles, dialogs. */
+  /* One step up: a slightly stronger line. Reserve it for the surface
+     that carries the screen — the review card, the primary CTA block. */
   .card-ink {
-    @apply rounded-xl border-ink border-stroke bg-bg-elevated p-6 shadow-md;
+    @apply rounded-xl border-hair border-ink bg-bg-elevated p-6;
   }
 
   /* ---------------------------------------------------------------- */
   /*  Form controls                                                    */
   /* ---------------------------------------------------------------- */
   .input {
-    @apply min-h-tap w-full rounded-lg border-ink border-stroke bg-bg-elevated
+    @apply min-h-tap w-full rounded-lg border-hair border-border bg-bg-elevated
            px-4 text-base text-text outline-none
            transition-colors duration-fast placeholder:text-text-subtle
            focus:border-accent;
@@ -156,6 +161,23 @@
   /* Bottom action zone: sits in the thumb arc, clear of the gesture bar. */
   .thumb-zone {
     padding-bottom: calc(var(--space-4) + var(--safe-bottom));
+  }
+
+  /* Answer field + submit button.
+     Side by side on a wide screen; stacked on a phone, where sharing a row
+     leaves the input about twelve characters wide and the button squeezed
+     against it. The button goes full width when stacked so it lands under
+     the thumb. */
+  .answer-row {
+    @apply flex flex-col gap-3 sm:flex-row sm:items-start;
+  }
+  .answer-row > :not(input):not(textarea):not(.answer-field) {
+    @apply w-full sm:w-auto;
+  }
+  .answer-row > input,
+  .answer-row > textarea,
+  .answer-row > .answer-field {
+    @apply w-full sm:flex-1;
   }
 }
 

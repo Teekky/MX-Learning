@@ -47,12 +47,17 @@ function cspPlugin(): Plugin {
 }
 
 // MX Learning — installable PWA, offline-first
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const isDemo = mode === 'demo'
+  return {
   plugins: [
     react(),
     cspPlugin(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // `prompt`, not `autoUpdate`: a page that reloads itself in the middle
+      // of a review would throw away the card you were grading. The new
+      // build waits behind a banner instead (see UpdatePrompt).
+      registerType: 'prompt',
       includeAssets: ['favicon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'MX Learning — English, five minutes at a time',
@@ -111,7 +116,10 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    // Different ports per environment so you can tell at a glance which
+    // database a tab is talking to — and so both can run side by side.
+    //   5173 → real deck        5174 → demo deck
+    port: isDemo ? 5174 : 5173,
     strictPort: false,
     open: false,
     // Proxy Mistral API to avoid CORS in the browser PWA.
@@ -124,4 +132,8 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: isDemo ? 4174 : 4173,
+  },
+  }
 })

@@ -18,6 +18,7 @@ import { InstallPrompt } from './InstallPrompt'
 import { Sidebar } from './Sidebar'
 import { ToastContainer } from './ToastContainer'
 import { TopBar } from './TopBar'
+import { UpdatePrompt } from './UpdatePrompt'
 import { countDue } from '@/db/queries'
 import { allowedLevelsFor } from '@/utils/levelFilter'
 import { useAppStore } from '@/store/useAppStore'
@@ -102,7 +103,7 @@ export function Layout() {
       {isMobile && drawerOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-stroke/50 backdrop-blur-[2px]"
+            className="fixed inset-0 z-40 bg-text/40 backdrop-blur-[2px]"
             onClick={() => setDrawerOpen(false)}
             aria-hidden
           />
@@ -134,6 +135,7 @@ export function Layout() {
         <BottomNav onMore={() => setDrawerOpen(true)} dueCount={due} />
       )}
 
+      <UpdatePrompt />
       <InstallPrompt />
       <ToastContainer />
     </div>

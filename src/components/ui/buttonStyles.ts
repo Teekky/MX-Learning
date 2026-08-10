@@ -12,11 +12,14 @@ import { cn } from './cn'
 export type ButtonVariant = 'primary' | 'ghost' | 'quiet' | 'danger'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
+/* Flat by design: a fill or a hairline, never a drop shadow. Buttons recur
+   several times per screen, and giving each its own elevation made ordinary
+   controls compete with the content they act on. */
 export const BUTTON_VARIANT: Record<ButtonVariant, string> = {
-  primary: 'border-ink border-stroke bg-accent text-on-accent shadow-md hover:bg-accent-hover',
-  ghost: 'border-ink border-stroke bg-bg-elevated text-text shadow-md hover:bg-bg-subtle',
-  quiet: 'border-hair border-transparent text-text-muted hover:bg-bg-subtle hover:text-text',
-  danger: 'border-ink border-stroke bg-danger text-on-accent shadow-md',
+  primary: 'border-transparent bg-accent text-on-accent hover:bg-accent-hover',
+  ghost: 'border-border bg-bg-elevated text-text hover:bg-bg-subtle',
+  quiet: 'border-transparent text-text-muted hover:bg-bg-subtle hover:text-text',
+  danger: 'border-transparent bg-danger text-on-accent hover:brightness-95',
 }
 
 /* `sm` shrinks the visual height only; use it inside rows that are already
@@ -33,8 +36,8 @@ export function buttonClass(
   extra?: string,
 ): string {
   return cn(
-    'press no-select inline-flex items-center justify-center gap-2 rounded-lg font-semibold',
-    'disabled:pointer-events-none disabled:opacity-40',
+    'press no-select inline-flex items-center justify-center gap-2 rounded-lg',
+    'border-hair font-semibold disabled:pointer-events-none disabled:opacity-40',
     BUTTON_VARIANT[variant],
     BUTTON_SIZE[size],
     extra,

@@ -40,14 +40,14 @@ export function ReviewComplete({
       {/* --- The stamp ------------------------------------------------- */}
       <div className="relative mb-8 flex h-28 w-28 items-center justify-center">
         <motion.span
-          className="absolute inset-0 rounded-full border-ink border-accent"
+          className="absolute inset-0 rounded-full border-ink border-accent/60"
           initial={{ scale: 0.6, opacity: 0.9 }}
           animate={{ scale: 1.35, opacity: 0 }}
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
           aria-hidden
         />
         <motion.div
-          className="flex h-24 w-24 items-center justify-center rounded-full border-ink border-stroke bg-accent shadow-lg"
+          className="flex h-24 w-24 items-center justify-center rounded-full bg-accent shadow-md"
           initial={{ scale: 0.3, rotate: -18, opacity: 0 }}
           animate={{ scale: 1, rotate: -6, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 320, damping: 14, mass: 0.8 }}

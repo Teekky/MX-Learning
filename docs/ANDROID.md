@@ -50,6 +50,43 @@ If you deploy to a subpath (e.g. `user.github.io/mx-learning/`), set Vite's
 `base` and the manifest `start_url`/`scope` to match, or the service worker
 will not find its files.
 
+## Keeping every device up to date
+
+There are two answers, and they differ a lot in effort.
+
+### Today: rebuild per device
+
+Each machine runs its own copy, so each machine needs `git pull` and a
+rebuild. Fine for one laptop, tedious for three devices and a phone.
+
+### Recommended: host the build once
+
+`npm run build` emits a static `dist/` with no server component. Push it to
+any free static host — GitHub Pages, Netlify, Cloudflare Pages — and every
+device just loads the same URL.
+
+What that buys you:
+
+- **One deploy updates everything.** The service worker notices the new
+  build, downloads it in the background, and shows the "A new version is
+  ready" banner. One tap, no reinstall.
+- **The phone install keeps working.** An installed PWA points at the URL, so
+  it updates with everything else.
+- **Data is untouched.** Updates replace code, never IndexedDB.
+
+Two things to get right when you set it up:
+
+1. If you deploy to a subpath (`user.github.io/mx-learning/`), set Vite's
+   `base` and the manifest's `start_url`/`scope` to match, or the service
+   worker will not find its files.
+2. `VITE_MISTRAL_API_KEY` is baked into the bundle at build time. A public
+   host means a publicly readable key. Either keep the deployment private,
+   or build without the key and accept that the AI modes are off on hosted
+   devices while spaced repetition, idioms and the deck all still work.
+
+Point 2 is the real decision: an API key in a public bundle is an API key
+someone else can spend.
+
 ## Progress is per-device, on purpose
 
 The whole app lives in IndexedDB in whichever browser profile is running it.

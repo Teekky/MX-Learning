@@ -41,6 +41,7 @@ import { speak, stopSpeaking } from '@/audio/tts'
 import { playBuzz, playDing, vibrate } from '@/audio/sfx'
 import { EmptyDeckNotice } from './EmptyDeckNotice'
 import type { Quality, Review } from '@/types'
+import { Key, KeyHint } from '@/components/ui'
 
 const MAX_CARDS_PER_SESSION = 8
 /** How many free replays before XP penalty kicks in. */
@@ -514,17 +515,15 @@ export function ListeningSession() {
               spellCheck={false}
             />
 
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-xs text-text-subtle">
-                Press{' '}
-                <kbd className="rounded bg-bg-subtle px-1.5 py-0.5">Enter</kbd>{' '}
-                to {submitted ? 'continue' : 'submit'}.
-              </span>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <KeyHint className="mt-0 text-left">
+                Press <Key>Enter</Key> to {submitted ? 'continue' : 'submit'}.
+              </KeyHint>
               {!submitted ? (
                 <button
                   onClick={submit}
                   disabled={!value.trim()}
-                  className="btn-primary disabled:opacity-40"
+                  className="btn-primary w-full disabled:opacity-40 sm:w-auto"
                 >
                   Submit
                 </button>
@@ -532,7 +531,7 @@ export function ListeningSession() {
                 <button
                   ref={nextBtnRef}
                   onClick={advance}
-                  className="btn-primary"
+                  className="btn-primary w-full sm:w-auto"
                 >
                   Next →
                 </button>
