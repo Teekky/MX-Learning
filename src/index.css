@@ -2,66 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===================================================================
-   Theme palettes
-   ===================================================================
-   The app supports two themes: dark (the original, on `<html class="dark">`)
-   and light (the default with no class). Both palettes are exposed as RGB
-   triplets so Tailwind's `<alpha-value>` machinery stays compatible
-   (e.g. `bg-accent/40`, `text-text-muted/60`).
-
-   The class is applied early in src/main.tsx (before React renders) to
-   avoid a flash of unthemed content, and kept in sync with `settings.theme`
-   by App.tsx.
-   ================================================================= */
-
-:root {
-  /* Light theme (default — no class on <html>). */
-  --color-bg: 247 247 250;
-  --color-bg-elevated: 255 255 255;
-  --color-bg-subtle: 238 240 244;
-  --color-border: 216 216 224;
-  --color-border-subtle: 231 231 236;
-  --color-text: 21 21 27;
-  --color-text-muted: 90 90 110;
-  --color-text-subtle: 138 138 158;
-  --color-accent: 108 76 240;
-  --color-accent-hover: 90 60 224;
-  --color-success: 37 160 107;
-  --color-warning: 217 119 6;
-  --color-danger: 220 38 38;
-  color-scheme: light;
-}
-
-:root.dark {
-  /* Dark theme — the original MX Learning palette. */
-  --color-bg: 11 11 15;
-  --color-bg-elevated: 21 21 27;
-  --color-bg-subtle: 28 28 36;
-  --color-border: 42 42 53;
-  --color-border-subtle: 31 31 41;
-  --color-text: 231 231 238;
-  --color-text-muted: 154 154 174;
-  --color-text-subtle: 107 107 128;
-  --color-accent: 124 92 255;
-  --color-accent-hover: 142 114 255;
-  --color-success: 61 220 151;
-  --color-warning: 255 184 77;
-  --color-danger: 255 107 107;
-  color-scheme: dark;
-}
+/* Palette, type, space, motion and device tokens live in src/tokens.css,
+   which main.tsx imports before this file. Everything below consumes them
+   through Tailwind — no raw values. */
 
 @layer base {
+  html {
+    /* `dvh` rather than `vh`: Chrome on Android grows and shrinks its URL
+       bar as you scroll, and `vh` is frozen at the largest viewport, which
+       leaves a dead strip under the fold. */
+    min-height: 100dvh;
+    /* Stop the pull-to-refresh / rubber-band bounce from fighting the
+       swipe gestures on the review card. */
+    overscroll-behavior-y: none;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
-    @apply bg-bg text-text font-sans antialiased;
+    @apply bg-bg font-sans text-text antialiased;
     margin: 0;
-    min-height: 100vh;
+    min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Kill the blue tap flash — we render our own press states. */
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Subtle scrollbar — Apple-like */
+  /* The display face carries the app's voice: a soft, slightly wonky slab.
+     Applied via `font-display`, with the variation axes set here so every
+     use gets the same character. */
+  .font-display {
+    font-variation-settings: var(--display-variation);
+    letter-spacing: var(--tracking-display);
+  }
+
+  /* One visible, consistent focus ring everywhere — keyboard users get a
+     first-class experience, mouse users never see it. */
+  :focus-visible {
+    outline: var(--border-ink) solid rgb(var(--color-accent));
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -70,47 +53,123 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
+    @apply rounded-full bg-border;
   }
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-text-subtle;
   }
 
-  /* Selection */
   ::selection {
     @apply bg-accent-subtle text-text;
   }
 }
 
 @layer components {
+  /* ---------------------------------------------------------------- */
+  /*  Press physics                                                   */
+  /* ---------------------------------------------------------------- */
+  /* The signature interaction: a pressed element slides into its own hard
+     shadow. Composited (transform + box-shadow only), so it stays smooth
+     at 120 Hz. */
+  .press {
+    @apply transition-[transform,box-shadow] duration-fast ease-out;
+    will-change: transform;
+  }
+  .press:active {
+    transform: translate3d(2px, 2px, 0);
+    box-shadow: var(--shadow-xs);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Buttons                                                          */
+  /* ---------------------------------------------------------------- */
+  /* `border-ink` is the 2px stroke *width*; `border-stroke` is its colour. */
+  .btn-base {
+    @apply press no-select inline-flex min-h-tap items-center justify-center
+           gap-2 rounded-lg border-ink border-stroke px-5 text-sm font-semibold
+           disabled:pointer-events-none disabled:opacity-40;
+  }
+
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 font-medium text-white shadow-lg shadow-accent/20 transition-all hover:bg-accent-hover hover:shadow-accent/30 active:scale-[0.98];
+    @apply btn-base bg-accent text-on-accent shadow-md hover:bg-accent-hover;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-bg-elevated px-5 py-2.5 font-medium text-text transition-all hover:border-text-subtle hover:bg-bg-subtle active:scale-[0.98];
+    @apply btn-base bg-bg-elevated text-text shadow-md hover:bg-bg-subtle;
   }
 
-  /* The card shadow uses `--color-shadow` so it stays subtle on light bg
-     and dramatic on dark bg without needing a separate utility class. */
+  /* Tertiary: no border, no shadow — for low-stakes inline actions. */
+  .btn-quiet {
+    @apply inline-flex min-h-tap items-center justify-center gap-2 rounded-lg
+           px-4 text-sm font-medium text-text-muted
+           transition-colors duration-fast hover:bg-bg-subtle hover:text-text;
+  }
+
+  .btn-danger {
+    @apply btn-base bg-danger text-on-accent shadow-md;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Surfaces                                                         */
+  /* ---------------------------------------------------------------- */
+  /* Everyday card: hairline border, no shadow. Quiet by default so the
+     screen doesn't turn into a shadow soup. */
   .card {
-    @apply rounded-2xl border border-border bg-bg-elevated p-6;
-    box-shadow: 0 12px 32px rgb(var(--color-shadow) / var(--card-shadow-opacity));
+    @apply rounded-xl border-hair border-border bg-bg-elevated p-6;
   }
 
+  /* The statement surface — ink stroke plus hard offset. Reserve it for
+     things that matter: the review card, primary stat tiles, dialogs. */
+  .card-ink {
+    @apply rounded-xl border-ink border-stroke bg-bg-elevated p-6 shadow-md;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Form controls                                                    */
+  /* ---------------------------------------------------------------- */
   .input {
-    @apply rounded-lg border border-border bg-bg-subtle px-3 py-2 text-sm text-text outline-none transition-colors placeholder:text-text-subtle focus:border-accent focus:bg-bg-elevated;
+    @apply min-h-tap w-full rounded-lg border-ink border-stroke bg-bg-elevated
+           px-4 text-base text-text outline-none
+           transition-colors duration-fast placeholder:text-text-subtle
+           focus:border-accent;
+    /* 16px minimum, otherwise iOS/Android zoom the page on focus. */
+    font-size: max(var(--text-base), 16px);
+  }
+
+  .input-invalid {
+    @apply border-danger;
+  }
+
+  .label {
+    @apply mb-2 block text-xs font-semibold uppercase tracking-wider text-text-muted;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Layout helpers                                                   */
+  /* ---------------------------------------------------------------- */
+  /* Horizontal breathing room that also clears a curved screen edge. */
+  .edge-x {
+    padding-left: calc(var(--edge-gutter) + var(--safe-left));
+    padding-right: calc(var(--edge-gutter) + var(--safe-right));
+  }
+
+  /* Bottom action zone: sits in the thumb arc, clear of the gesture bar. */
+  .thumb-zone {
+    padding-bottom: calc(var(--space-4) + var(--safe-bottom));
   }
 }
 
-/* Card shadow tokens — different intensities per theme so the elevation
-   feels right in both. Defaults are tuned for light; dark overrides below. */
-:root {
-  --color-shadow: 17 17 30;
-  --card-shadow-opacity: 0.10;
-}
+@layer utilities {
+  /* Opt out of text selection on things you swipe or double-tap. */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
 
-:root.dark {
-  --color-shadow: 0 0 0;
-  --card-shadow-opacity: 0.25;
+  /* Promote to its own layer before animating — avoids a first-frame hitch
+     on the review card, which is the one place jank is unforgivable. */
+  .gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
 }

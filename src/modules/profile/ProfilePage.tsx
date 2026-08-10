@@ -18,7 +18,7 @@ import {
   type AchievementDef,
 } from '@/utils/achievements'
 import { PageLoader } from '@/components/PageLoader'
-import type { DailyLog, Level } from '@/types'
+import type { DailyLog } from '@/types'
 
 type AchievementRow = AchievementDef & { unlockedAt?: number }
 

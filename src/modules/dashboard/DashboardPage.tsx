@@ -1,16 +1,41 @@
+/**
+ * Dashboard — answers one question first: *is there anything to do right now?*
+ *
+ * The hero is the review call to action, sized and coloured so it cannot be
+ * missed. Statistics come second, because numbers about your learning are
+ * only interesting once the learning has happened. Weakest words come last,
+ * as a reason to come back.
+ */
+
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Flame, Plus, Quote, Target, Zap } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
-import { countDue, getDailyLogsRange, getWeakPairs } from '@/db/queries'
-import { allowedLevelsFor } from '@/utils/levelFilter'
+import {
+  getDailyLogsRange,
+  getDeckSummary,
+  getRetention,
+  getWeakPairs,
+  type DeckSummary,
+} from '@/db/queries'
 import { getTodayLog } from '@/utils/dailyLog'
 import { shouldRemind } from '@/utils/streakReminder'
-import { PageLoader } from '@/components/PageLoader'
+import { allowedLevelsFor } from '@/utils/levelFilter'
+import {
+  Badge,
+  buttonClass,
+  Card,
+  EmptyState,
+  LevelBadge,
+  Meter,
+  PageLoader,
+  Stat,
+} from '@/components/ui'
 import { TILES, LS_FAVORITES } from '@/modules/practice/practiceTiles'
-import type { DailyLog, Level, SRSCard, Word } from '@/types'
+import type { DailyLog, SRSCard, Word } from '@/types'
 
-const WEAK_LIMIT = 10
+const WEAK_LIMIT = 5
 type Pair = { card: SRSCard; word: Word }
 
 function readFavorites(): Set<string> {
@@ -28,26 +53,29 @@ export function DashboardPage() {
   const stats = useAppStore((s) => s.stats)
   const settings = useAppStore((s) => s.settings)
   const sessionReviews = useAppStore((s) => s.session.reviewsDone)
-  const [due, setDue] = useState(0)
+
+  const [deck, setDeck] = useState<DeckSummary | null>(null)
+  const [retention, setRetention] = useState<number | null | undefined>(undefined)
   const [logs, setLogs] = useState<DailyLog[] | null>(null)
   const [today, setToday] = useState<DailyLog | null>(null)
   const [weak, setWeak] = useState<Pair[] | null>(null)
+
   const [pinnedTiles] = useState(() => {
     const favs = readFavorites()
     return TILES.filter((t) => favs.has(t.slug))
   })
 
   useEffect(() => {
-    const levels = stats?.cefrLevel
-      ? allowedLevelsFor(stats.cefrLevel)
-      : undefined
+    const levels = stats?.cefrLevel ? allowedLevelsFor(stats.cefrLevel) : undefined
     Promise.all([
-      countDue(levels),
+      getDeckSummary(),
+      getRetention(30),
       getDailyLogsRange(7),
       getTodayLog(),
       getWeakPairs(WEAK_LIMIT, levels),
-    ]).then(([n, l, t, w]) => {
-      setDue(n)
+    ]).then(([d, r, l, t, w]) => {
+      setDeck(d)
+      setRetention(r)
       setLogs(l)
       setToday(t)
       setWeak(w)
@@ -58,335 +86,336 @@ export function DashboardPage() {
     if (!logs) return null
     const xp = logs.reduce((a, l) => a + l.xpEarned, 0)
     const reviews = logs.reduce((a, l) => a + l.reviewsDone, 0)
-    const mistakes = logs.reduce((a, l) => a + l.mistakes, 0)
     const seconds = logs.reduce((a, l) => a + l.timeSpentSeconds, 0)
-    const accuracy = reviews > 0 ? 1 - mistakes / reviews : 0
     const activeDays = logs.filter((l) => l.reviewsDone > 0).length
-    return { xp, reviews, mistakes, seconds, accuracy, activeDays }
+    return { xp, reviews, seconds, activeDays }
   }, [logs])
 
-  if (!stats || !logs || !weekly || !today || !weak) return <PageLoader />
+  if (!stats || !deck || !logs || !weekly || !today || !weak || retention === undefined) {
+    return <PageLoader label="Reading your progress…" />
+  }
 
-  const hasAnyActivity = weekly.reviews > 0
+  const firstName = stats.displayName.split(' ')[0]
   const reminderActive = !!settings && shouldRemind({ settings, stats })
-  const goalPct = Math.min(
-    100,
-    Math.round((today.xpEarned / stats.dailyGoalXp) * 100),
-  )
+  const emptyDeck = deck.total === 0
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
-      {/* ----- Greeting ----- */}
-      <motion.section
+    <div className="mx-auto max-w-3xl space-y-8">
+      {/* ---- Greeting -------------------------------------------------- */}
+      <motion.header
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
       >
-        <h1 className="mb-1 font-display text-3xl font-semibold tracking-tight">
-          Welcome back, {stats.displayName}.
+        <h1 className="font-display text-3xl font-semibold tracking-display text-text">
+          {greeting()}, {firstName}.
         </h1>
-        <p className="text-text-muted">
-          Today is a great day to push your English a little further.
+        <p className="mt-1 text-text-muted">
+          {emptyDeck
+            ? 'Your deck is empty — let’s put something in it.'
+            : deck.due > 0
+              ? `${deck.due} card${deck.due === 1 ? '' : 's'} waiting. Five minutes is enough.`
+              : 'Nothing due. A good day to add something new.'}
         </p>
-      </motion.section>
+      </motion.header>
 
-      {/* ----- Streak reminder banner ----- */}
-      {reminderActive && (
-        <motion.section
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="card flex flex-wrap items-center justify-between gap-4 border-warning/30"
+      {/* ---- The one thing to do --------------------------------------- */}
+      {emptyDeck ? (
+        <EmptyState
+          icon={<Plus size={26} />}
+          title="Add your first word"
+          body="Type one in by hand, pull a native expression from the idiom library, or paste a whole article and let the tutor pick the words out."
         >
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 text-xl leading-none">⏰</span>
-            <div>
-              <div className="font-display text-base font-semibold text-text">
-                {stats.currentStreak > 0
-                  ? `Your ${stats.currentStreak}-day streak needs you today.`
-                  : 'A few minutes today and your streak begins.'}
-              </div>
-              <div className="text-sm text-text-muted">
-                Even one quick session keeps the rhythm going.
-              </div>
-            </div>
-          </div>
-          <Link to="/practice" className="btn-primary">
-            Practice now →
+          <Link to="/deck" className={buttonClass('primary', 'lg')}>
+            Add a word
           </Link>
+          <Link to="/idioms" className={buttonClass('ghost', 'lg')}>
+            Browse idioms
+          </Link>
+        </EmptyState>
+      ) : (
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.34, delay: 0.04, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <Card weight="ink" className="flex flex-wrap items-center justify-between gap-5">
+            <div className="min-w-0">
+              <div className="flex items-baseline gap-2">
+                <span className="font-display text-4xl font-semibold tabular-nums text-text">
+                  {deck.due}
+                </span>
+                <span className="text-text-muted">
+                  card{deck.due === 1 ? '' : 's'} due
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-text-muted">
+                {deck.due > 0
+                  ? 'Spaced repetition works when it is boring and daily.'
+                  : 'The schedule is clear — come back tomorrow.'}
+              </p>
+            </div>
+            <Link
+              to="/review"
+              className={buttonClass('primary', 'lg', 'w-full sm:w-auto')}
+            >
+              <Zap size={20} />
+              {deck.due > 0 ? 'Start reviewing' : 'Review anyway'}
+            </Link>
+          </Card>
         </motion.section>
       )}
 
-      {/* ----- Quick actions + slim daily goal ----- */}
-      <section className="card space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-text-muted">
-            Start practicing
+      {/* ---- Streak nudge ---------------------------------------------- */}
+      {reminderActive && !emptyDeck && (
+        <Card padding="sm" className="flex flex-wrap items-center justify-between gap-4 border-warning/40">
+          <div className="flex items-start gap-3">
+            <Flame size={20} className="mt-0.5 shrink-0 text-warning" />
+            <div>
+              <div className="font-display text-base font-semibold text-text">
+                {stats.currentStreak > 0
+                  ? `Your ${stats.currentStreak}-day streak needs today.`
+                  : 'A few minutes today and the streak begins.'}
+              </div>
+              <div className="text-sm text-text-muted">
+                One session is enough to keep the rhythm.
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* ---- Today's goal ---------------------------------------------- */}
+      <section className="space-y-3">
+        <div className="flex items-baseline justify-between">
+          <h2 className="font-mono text-2xs font-semibold uppercase tracking-wider text-text-subtle">
+            Today’s goal
           </h2>
-          <span className="text-sm text-text-muted">
-            <strong className="text-accent">{due}</strong>{' '}
-            {due === 1 ? 'card is' : 'cards are'} due
+          <span className="font-mono text-sm tabular-nums text-text-muted">
+            <strong
+              className={today.xpEarned >= stats.dailyGoalXp ? 'text-success' : 'text-text'}
+            >
+              {today.xpEarned}
+            </strong>
+            <span className="text-text-subtle"> / {stats.dailyGoalXp} XP</span>
           </span>
         </div>
+        <Meter
+          value={today.xpEarned}
+          max={stats.dailyGoalXp}
+          tone={today.xpEarned >= stats.dailyGoalXp ? 'success' : 'accent'}
+          label="Daily XP goal"
+        />
+      </section>
 
-        {/* Slim daily goal */}
-        <div className="space-y-1.5">
-          <div className="flex items-baseline justify-between text-xs">
-            <span className="uppercase tracking-wider text-text-subtle">
-              Today's goal
-            </span>
-            <span className="text-text-muted">
-              <strong className={goalPct >= 100 ? 'text-success' : 'text-text'}>
-                {today.xpEarned}
-              </strong>{' '}
-              / {stats.dailyGoalXp} XP
-              {goalPct >= 100 && <span className="ml-1 text-success">✓</span>}
-            </span>
-          </div>
-          <div className="h-1 overflow-hidden rounded-full bg-bg-subtle">
-            <motion.div
-              className={`h-full rounded-full ${
-                goalPct >= 100 ? 'bg-success' : 'bg-accent'
-              }`}
-              initial={{ width: 0 }}
-              animate={{ width: `${goalPct}%` }}
-              transition={{ duration: 0.4 }}
-            />
-          </div>
-        </div>
+      {/* ---- The numbers ------------------------------------------------ */}
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat
+          label="Words learned"
+          value={deck.learned}
+          detail={`of ${deck.total} in your deck`}
+          icon={<Target size={16} />}
+        />
+        <Stat
+          label="Streak"
+          value={`${stats.currentStreak}d`}
+          detail={
+            stats.longestStreak > stats.currentStreak
+              ? `best ${stats.longestStreak}d`
+              : 'personal best'
+          }
+          tone={stats.currentStreak > 0 ? 'warning' : 'default'}
+          icon={<Flame size={16} />}
+        />
+        <Stat
+          label="Retention"
+          value={retention == null ? '—' : `${Math.round(retention * 100)}%`}
+          detail="last 30 days"
+          tone={
+            retention == null
+              ? 'default'
+              : retention >= 0.85
+                ? 'success'
+                : retention >= 0.7
+                  ? 'default'
+                  : 'warning'
+          }
+        />
+        <Stat
+          label="This week"
+          value={`+${weekly.xp}`}
+          detail={`${weekly.activeDays}/7 active days`}
+          tone="accent"
+        />
+      </section>
 
-        {/* Pinned favorites */}
+      {/* ---- Weekly rhythm ---------------------------------------------- */}
+      <Card
+        title="Last 7 days"
+        subtitle={
+          weekly.reviews > 0
+            ? `${weekly.reviews} reviews · ${
+                weekly.seconds >= 60 ? `${Math.round(weekly.seconds / 60)} min` : `${weekly.seconds}s`
+              }`
+            : 'Nothing yet this week.'
+        }
+      >
+        <XpStrip logs={logs} />
+      </Card>
+
+      {/* ---- Weakest words ----------------------------------------------- */}
+      {!emptyDeck && (
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="font-display text-xl font-semibold tracking-display">
+                Your weakest words
+              </h2>
+              <p className="text-sm text-text-muted">
+                Ranked by lapses — the ones you keep forgetting.
+              </p>
+            </div>
+            {weak.length > 0 && (
+              <Link to="/practice/weak-words" className={buttonClass('ghost')}>
+                Drill only these
+              </Link>
+            )}
+          </div>
+
+          {weak.length === 0 ? (
+            <Card weight="sunken" padding="sm">
+              <p className="py-4 text-center text-sm text-text-muted">
+                {weekly.reviews > 0
+                  ? 'No lapses yet — you have recalled everything you have been shown.'
+                  : 'Run one review session and your problem words will surface here.'}
+              </p>
+            </Card>
+          ) : (
+            <ul className="space-y-2">
+              <AnimatePresence initial={false}>
+                {weak.map((p, i) => (
+                  <WeakRow key={p.card.id ?? i} pair={p} rank={i + 1} />
+                ))}
+              </AnimatePresence>
+            </ul>
+          )}
+        </section>
+      )}
+
+      {/* ---- Secondary actions, at the bottom where the thumb is --------- */}
+      <section className="space-y-3">
         {pinnedTiles.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {pinnedTiles.map((t) => (
               <Link
                 key={t.slug}
                 to={`/practice/${t.slug}`}
-                className="flex items-center gap-2 rounded-lg border border-border bg-bg-subtle px-3 py-1.5 text-sm text-text-muted transition-colors hover:border-accent/40 hover:text-text"
+                className={buttonClass('ghost')}
               >
-                <t.Icon size={14} className="shrink-0 text-accent" />
-                <span>{t.title}</span>
+                <t.Icon size={16} className="text-accent" />
+                {t.title}
               </Link>
             ))}
           </div>
         )}
-
-        <div className="flex flex-wrap gap-3">
-          <Link to="/practice" className="btn-primary">
-            All modes →
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link to="/practice" className={buttonClass('ghost', 'md', 'flex-1')}>
+            <Zap size={18} /> All practice modes
           </Link>
-          <Link to="/practice/random-words" className="btn-ghost">
-            Words in context
+          <Link to="/idioms" className={buttonClass('ghost', 'md', 'flex-1')}>
+            <Quote size={18} /> Idiom library
           </Link>
-          <Link to="/deck" className="btn-ghost">
-            My deck
+          <Link to="/deck" className={buttonClass('ghost', 'md', 'flex-1')}>
+            <Plus size={18} /> Add a word
           </Link>
         </div>
-      </section>
-
-      {/* ----- Weekly activity ----- */}
-      <section className="card space-y-5">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <div className="text-xs uppercase tracking-wider text-text-subtle">
-              Last 7 days
-            </div>
-            <div className="mt-1 font-display text-xl font-semibold text-text">
-              {hasAnyActivity
-                ? `${weekly.activeDays} active day${weekly.activeDays === 1 ? '' : 's'}`
-                : 'Nothing yet this week.'}
-            </div>
-          </div>
-          <div className="flex flex-wrap justify-end gap-4 text-sm">
-            <Stat label="XP" value={`+${weekly.xp}`} />
-            <Stat label="Reviews" value={String(weekly.reviews)} />
-            <Stat
-              label="Accuracy"
-              value={
-                weekly.reviews > 0
-                  ? `${Math.round(weekly.accuracy * 100)}%`
-                  : '—'
-              }
-            />
-            <Stat
-              label="Time"
-              value={
-                weekly.seconds >= 60
-                  ? `${Math.round(weekly.seconds / 60)} min`
-                  : `${weekly.seconds}s`
-              }
-            />
-          </div>
-        </div>
-        <XpStrip logs={logs} />
-      </section>
-
-      {/* ----- Weakest words ----- */}
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="font-display text-xl font-semibold">
-              Your weakest words
-            </h2>
-            <p className="text-sm text-text-muted">
-              Ranked by lapses — the cards you've forgotten most often.
-            </p>
-          </div>
-          {weak.length > 0 && (
-            <Link
-              to="/practice/weak-words"
-              className="btn-primary"
-              title="Drill only these weak words in a focused session"
-            >
-              Drill only these →
-            </Link>
-          )}
-        </div>
-
-        {weak.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-bg-subtle/40 p-8 text-center text-sm text-text-muted">
-            {hasAnyActivity
-              ? "No lapses yet — you recalled everything you've been shown."
-              : "Run a practice session first. We'll surface your weakest words here after a few reviews."}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <AnimatePresence initial={false}>
-              {weak.map((p, i) => (
-                <WeakRow key={p.card.id ?? i} pair={p} rank={i + 1} />
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
       </section>
     </div>
   )
+}
+
+/* ------------------------------------------------------------------ */
+
+function greeting(): string {
+  const h = new Date().getHours()
+  if (h < 5) return 'Still up'
+  if (h < 12) return 'Good morning'
+  if (h < 18) return 'Good afternoon'
+  return 'Good evening'
 }
 
 function WeakRow({ pair, rank }: { pair: Pair; rank: number }) {
   const { word, card } = pair
-  const firstExample = word.examples?.[0]
   return (
-    <motion.div
+    <motion.li
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, height: 0 }}
-      className="card flex items-start gap-4 py-3"
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-subtle font-display text-sm font-semibold text-text-muted">
-        {rank}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="font-display text-base font-semibold text-text">
-            {word.lemma}
-          </span>
-          <LevelBadge level={word.level} />
-          <span className="text-xs text-text-subtle">{word.partOfSpeech}</span>
-        </div>
-        {(word.fr || word.definitionEn) && (
-          <div className="mt-0.5 text-sm text-text">
-            {word.fr && <span className="text-accent">{word.fr}</span>}
-            {word.fr && word.definitionEn && (
-              <span className="text-text-muted"> · </span>
-            )}
-            {word.definitionEn && (
-              <span className="text-text-muted">{word.definitionEn}</span>
-            )}
-          </div>
-        )}
-        {firstExample && (
-          <div className="mt-1 text-xs italic text-text-subtle">
-            "{firstExample.en}"
-          </div>
-        )}
-      </div>
-      <div className="flex shrink-0 flex-col items-end text-xs text-text-subtle">
-        <span>
-          <strong className="text-warning">{card.lapses}</strong> lapse
-          {card.lapses === 1 ? '' : 's'}
+      <Card padding="sm" className="flex items-start gap-3">
+        <span
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-subtle font-mono text-xs font-semibold text-text-muted"
+          aria-hidden
+        >
+          {rank}
         </span>
-        <span>{easeLabel(card.ease)}</span>
-      </div>
-    </motion.div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-display text-base font-semibold text-text">
+              {word.lemma}
+            </span>
+            <LevelBadge level={word.level} />
+          </div>
+          {(word.fr || word.definitionEn) && (
+            <p className="mt-0.5 truncate text-sm text-text-muted">
+              {word.definitionEn ?? word.fr}
+            </p>
+          )}
+        </div>
+        <Badge tone={card.lapses >= 5 ? 'danger' : 'warning'}>
+          {card.lapses} lapse{card.lapses === 1 ? '' : 's'}
+        </Badge>
+      </Card>
+    </motion.li>
   )
 }
 
-function easeLabel(ease: number): string {
-  if (ease < 1.5) return 'Very hard'
-  if (ease < 2.0) return 'Hard'
-  if (ease < 2.5) return 'Medium'
-  if (ease < 3.0) return 'Easy'
-  return 'Very easy'
-}
-
-function LevelBadge({ level }: { level: Level }) {
-  const color: Record<Level, string> = {
-    A1: 'bg-success/10 text-success border-success/30',
-    A2: 'bg-success/10 text-success border-success/30',
-    B1: 'bg-accent/10 text-accent border-accent/30',
-    B2: 'bg-accent/10 text-accent border-accent/30',
-    C1: 'bg-warning/10 text-warning border-warning/30',
-    C2: 'bg-warning/10 text-warning border-warning/30',
-  }
-  return (
-    <span
-      className={
-        'rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ' +
-        color[level]
-      }
-    >
-      {level}
-    </span>
-  )
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-[64px]">
-      <div className="text-xs uppercase tracking-wider text-text-subtle">
-        {label}
-      </div>
-      <div className="font-display text-lg font-semibold text-text">
-        {value}
-      </div>
-    </div>
-  )
-}
-
+/**
+ * Seven-day XP bars. Heights animate with `scaleY` from the bottom, so the
+ * whole strip is one composited transform per bar instead of seven layouts.
+ */
 function XpStrip({ logs }: { logs: DailyLog[] }) {
   const ordered = useMemo(() => [...logs].reverse(), [logs])
   const max = Math.max(1, ...ordered.map((l) => l.xpEarned))
 
   return (
     <div className="flex items-end gap-2">
-      {ordered.map((l) => {
-        const pct = l.xpEarned === 0 ? 0 : Math.max(12, (l.xpEarned / max) * 100)
-        const day = new Date(l.date).toLocaleDateString(undefined, {
-          weekday: 'short',
-        })
+      {ordered.map((l, i) => {
+        const ratio = l.xpEarned === 0 ? 0 : Math.max(0.08, l.xpEarned / max)
+        /* Forced to English rather than the system locale: the whole point
+           of this app is immersion, and a French "mar." in an otherwise
+           English interface breaks it. */
+        const day = new Date(l.date).toLocaleDateString('en-GB', { weekday: 'short' })
         return (
-          <div
-            key={l.date}
-            className="flex flex-1 flex-col items-center gap-1.5"
-            title={`${l.date}: ${l.xpEarned} XP · ${l.reviewsDone} reviews`}
-          >
+          <div key={l.date} className="flex flex-1 flex-col items-center gap-2">
             <div className="flex h-24 w-full items-end">
               <motion.div
-                className={
-                  'w-full rounded-md ' +
-                  (l.xpEarned === 0
-                    ? 'bg-border/40'
+                className={`w-full origin-bottom rounded-sm ${
+                  l.xpEarned === 0
+                    ? 'bg-border'
                     : l.goalReached
-                      ? 'bg-success/80'
-                      : 'bg-accent/80')
-                }
-                initial={{ height: 0 }}
-                animate={{ height: pct === 0 ? 4 : `${pct}%` }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+                      ? 'bg-success'
+                      : 'bg-accent'
+                }`}
+                style={{ height: '100%' }}
+                initial={{ scaleY: 0 }}
+                animate={{ scaleY: l.xpEarned === 0 ? 0.03 : ratio }}
+                transition={{ duration: 0.4, delay: i * 0.03, ease: [0.16, 1, 0.3, 1] }}
+                title={`${l.date}: ${l.xpEarned} XP · ${l.reviewsDone} reviews`}
               />
             </div>
-            <span className="text-[10px] uppercase tracking-wider text-text-subtle">
+            <span className="font-mono text-2xs uppercase tracking-wider text-text-subtle">
               {day}
             </span>
           </div>

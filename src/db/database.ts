@@ -13,6 +13,7 @@
  */
 
 import Dexie, { type Table } from 'dexie'
+import { DB_NAME, IS_DEMO } from '@/config'
 import type {
   Achievement,
   DailyLog,
@@ -35,7 +36,8 @@ class MXDatabase extends Dexie {
   settings!: Table<Settings, number>
 
   constructor() {
-    super('mx-learning')
+    // `mx-learning` in production, `mx-learning-demo` in staging. See src/config.ts.
+    super(DB_NAME)
 
     this.version(1).stores({
       // ++id = auto-incrementing primary key; & = unique; * = multi-entry
@@ -47,6 +49,13 @@ class MXDatabase extends Dexie {
       achievements: 'id, unlockedAt',
       tags: '++id, &name, parentId',
       settings: 'id',
+    })
+
+    // v2 — index `partOfSpeech` so the idioms module can pull its slice of the
+    // deck without scanning every word. Purely additive: existing rows are
+    // re-indexed in place by Dexie, no data is rewritten or lost.
+    this.version(2).stores({
+      words: '++id, lemma, level, *tags, frequencyRank, source, addedAt, partOfSpeech',
     })
   }
 }
@@ -118,8 +127,22 @@ async function doBootstrap(): Promise<void> {
       db.settings.count(),
     ])
     if (statsCount === 0) await db.userStats.add(DEFAULT_USER_STATS)
-    if (settingsCount === 0) await db.settings.add(DEFAULT_SETTINGS)
+    if (settingsCount === 0) {
+      await db.settings.add(
+        // Staging exists to look at screens, not to retake the CEFR test on
+        // every fresh demo database.
+        IS_DEMO
+          ? { ...DEFAULT_SETTINGS, onboardingComplete: true }
+          : DEFAULT_SETTINGS,
+      )
+    }
   })
+
+  if (IS_DEMO) {
+    // Dynamic import so the fixture never reaches a production bundle.
+    const { seedDemoData } = await import('./demoSeed')
+    await seedDemoData()
+  }
   // NOTE: We intentionally DO NOT auto-seed vocabulary anymore.
   // The deck should reflect what the user has learned — built via
   // "Learn from anything" (paste text) and other content flows.
