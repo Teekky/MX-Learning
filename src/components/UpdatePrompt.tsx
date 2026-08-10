@@ -15,9 +15,25 @@
  */
 
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { useLocation } from 'react-router-dom'
 import { RefreshCw, X } from 'lucide-react'
 import { Button } from '@/components/ui'
 
+/** The banner is suppressed here, but registration still happens. */
+const QUIET_ROUTES = ['/review', '/onboarding']
+
+/**
+ * Mounted at the router root, on every route — not inside the app shell.
+ *
+ * This component is what registers the service worker: importing
+ * `virtual:pwa-register/react` tells vite-plugin-pwa that the app handles
+ * registration itself, so it stops injecting `registerSW.js` into the HTML.
+ * When this lived inside `Layout`, a first-run visitor was redirected to
+ * `/onboarding` — which renders outside `Layout` — so nothing ever called
+ * `useRegisterSW`, no service worker registered, and Chrome offered a
+ * home-screen bookmark instead of a real install. Same for anyone who
+ * landed straight on `/review`.
+ */
 export function UpdatePrompt() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
@@ -31,7 +47,11 @@ export function UpdatePrompt() {
     },
   })
 
-  if (!needRefresh) return null
+  const { pathname } = useLocation()
+
+  // Registration above has already happened by this point; only the banner
+  // is withheld, so an update never interrupts a review or the placement test.
+  if (!needRefresh || QUIET_ROUTES.some((r) => pathname.startsWith(r))) return null
 
   return (
     <div

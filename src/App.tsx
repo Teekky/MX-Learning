@@ -13,6 +13,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { PageLoader } from '@/components/ui'
+import { UpdatePrompt } from '@/components/UpdatePrompt'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
 import { PracticePage } from '@/modules/practice/PracticePage'
 import { ReviewPage } from '@/modules/review/ReviewPage'
@@ -99,6 +100,12 @@ function App() {
 
   return (
     <BrowserRouter>
+      {/* Outside <Routes> on purpose: this is what registers the service
+          worker, and it has to run on every route — including /onboarding,
+          where a first-run visitor lands before the app shell ever mounts.
+          Without a registered service worker the app is not installable and
+          Chrome silently downgrades "Install" to a home-screen bookmark. */}
+      <UpdatePrompt />
       <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* Onboarding lives outside the Layout shell — no sidebar distractions. */}
