@@ -17,7 +17,7 @@
  * the feedback loop we want.
  */
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { db } from '@/db/database'
@@ -32,6 +32,7 @@ import {
   type FillInBlankResult,
 } from './FillInBlankExercise'
 import type { Review, SRSCard, Word } from '@/types'
+import { SessionComplete } from './SessionComplete'
 
 const MAX_CARDS_PER_SESSION = 10
 
@@ -106,34 +107,20 @@ export function WeakWordsSession() {
 
   if (state.kind === 'done') {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mx-auto max-w-xl space-y-6 text-center"
-      >
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-accent shadow-2xl shadow-accent/40">
-          <span className="font-display text-4xl">◆</span>
-        </div>
-        <h1 className="font-display text-3xl font-semibold">
-          Weak-words drill complete.
-        </h1>
-        <div className="card grid grid-cols-3 gap-6">
-          <SummaryStat
-            label="Correct"
-            value={`${state.correct} / ${state.total}`}
-          />
-          <SummaryStat label="XP earned" value={`+${state.xp}`} />
-          <SummaryStat label="Time" value={`${state.seconds}s`} />
-        </div>
-        <div className="flex justify-center gap-3">
-          <Link to="/review" className="btn-ghost">
-            Back to review
-          </Link>
-          <button onClick={() => navigate(0)} className="btn-primary">
-            Drill again
-          </button>
-        </div>
-      </motion.div>
+      <SessionComplete
+        icon="◆"
+        title="Weak-words drill complete."
+        subtitle="Recall these enough times and they stop being your weakest."
+        stats={[
+          { label: 'Correct', value: `${state.correct} / ${state.total}` },
+          { label: 'XP earned', value: `+${state.xp}` },
+          { label: 'Time', value: `${state.seconds}s` },
+        ]}
+        onRepeat={() => navigate(0)}
+        repeatLabel="Drill again"
+        backTo="/review"
+        backLabel="Back to review"
+      />
     )
   }
 
@@ -207,15 +194,3 @@ export function WeakWordsSession() {
   )
 }
 
-function SummaryStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="text-xs uppercase tracking-wider text-text-subtle">
-        {label}
-      </div>
-      <div className="mt-1 font-display text-2xl font-semibold text-text">
-        {value}
-      </div>
-    </div>
-  )
-}

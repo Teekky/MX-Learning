@@ -45,6 +45,19 @@ with `--strictPort` rather than quietly moving to the next free one.
 > `vite.config.ts` allowlists `.local` anyway — it is useful from a Mac, an
 > iPhone, or another PC — but plan around the IP on Android.
 
+> **Status, honestly.** Neither local route below has produced a real
+> install on the Galaxy S22 Ultra so far. The `chrome://flags` allowlist was
+> set to *Enabled* with the correct origin and `window.isSecureContext`
+> stayed `false`; the USB route never got started because Windows does not
+> see the phone at all, which points at a charge-only cable. Settings →
+> **Install check** inside the app reports which precondition is failing on
+> any given device — start there rather than working blind.
+>
+> Until one of them works, the app is perfectly usable in a Chrome tab at
+> the LAN address; it simply has no offline cache and no standalone window.
+> The path that sidesteps all of this is a real `https://` origin — see
+> *Keeping every device up to date* below.
+
 ### A. Install over Wi-Fi, from the LAN address (no cable)
 
 1. On the computer: `npm run phone`, and leave the terminal open.
