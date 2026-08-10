@@ -26,6 +26,7 @@
 
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import net from 'node:net'
 import { networkInterfaces } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -46,6 +47,24 @@ const dim = (s) => `\x1b[2m${s}\x1b[0m`
 const cyan = (s) => `\x1b[36m${s}\x1b[0m`
 const yellow = (s) => `\x1b[33m${s}\x1b[0m`
 
+/**
+ * Is the port free?
+ *
+ * We serve with `--strictPort` on purpose: silently moving to 4174 would
+ * change the origin, and an installed app is bound to its origin — it would
+ * simply stop finding its own data. Better to fail loudly here, with an
+ * explanation, than to succeed on the wrong port.
+ */
+function portIsFree(port) {
+  return new Promise((resolve) => {
+    const probe = net
+      .createServer()
+      .once('error', () => resolve(false))
+      .once('listening', () => probe.close(() => resolve(true)))
+      .listen(port, '0.0.0.0')
+  })
+}
+
 function lanAddresses() {
   const found = []
   for (const [name, addrs] of Object.entries(networkInterfaces())) {
@@ -55,6 +74,24 @@ function lanAddresses() {
     }
   }
   return found
+}
+
+/* ---- 0. Is the port free? ------------------------------------------ */
+
+if (!(await portIsFree(PORT))) {
+  console.error(
+    yellow(`\n  Port ${PORT} is already in use.\n`) +
+      `  Something is still serving on it — most likely a previous\n` +
+      `  ${bold('npm run phone')} that was never stopped.\n\n` +
+      `  Find it and stop it:\n` +
+      cyan(`      netstat -ano | findstr :${PORT}\n`) +
+      cyan(`      taskkill /PID <the-number-in-the-last-column> /F\n\n`) +
+      `  Then run ${bold('npm run phone')} again.\n\n` +
+      dim(`  Not moving to another port on purpose: an installed app is\n`) +
+      dim(`  bound to its origin, and the port is part of that. Serving on\n`) +
+      dim(`  ${PORT + 1} would look fine and quietly lose your deck.\n`),
+  )
+  process.exit(1)
 }
 
 /* ---- 1. Build ----------------------------------------------------- */

@@ -27,46 +27,55 @@ only register in a **secure context**. Browsers count `https://` and
 So the LAN URL is fine for glancing at the app on the phone, and it will never
 offer to install. Two ways around that, both free:
 
-### A. Install over Wi-Fi, by machine name (no cable, no router config)
+### First, what an "origin" is — it decides where your deck lives
 
-The shortest path, and the one that survives.
+A browser files everything a site stores — the offline cache *and* the
+IndexedDB holding your deck — under the site's **origin**: scheme + host +
+port, e.g. `http://192.168.1.173:4173`. Change any part of that and the
+browser sees a different site, with its own empty storage. Nothing is
+deleted; it is simply filed under an address you are no longer visiting.
 
-**Use the computer's mDNS name, not its IP.** Windows answers to
-`<hostname>.local` on the local network, and that name does not change when
-the router hands out a different address. Find it with `hostname` in a
-terminal; here it is `Teekky`, so the address is `http://teekky.local:4173`.
+That is why the install address matters, and why the serving port is pinned
+with `--strictPort` rather than quietly moving to the next free one.
 
-This matters more than it sounds. A browser files everything a site stores —
-the service worker cache *and* the IndexedDB holding your deck — under the
-site's **origin**, which is scheme + host + port. Install from
-`http://192.168.1.173:4173` and that address is baked in. The day DHCP hands
-your machine `.174`, the installed app points at an origin that no longer
-exists: not corrupted, but unreachable, with a fresh empty database at the
-new address. The `.local` name sidesteps the whole problem without touching
-the router.
+> **A note on `.local` names.** Windows answers to `<hostname>.local` on the
+> LAN, and using it would sidestep the whole IP problem. It does not work
+> here: Android's system resolver does not do mDNS for ordinary hostname
+> lookups, so Chrome on Android returns `DNS_PROBE_FINISHED_NXDOMAIN`.
+> `vite.config.ts` allowlists `.local` anyway — it is useful from a Mac, an
+> iPhone, or another PC — but plan around the IP on Android.
 
-Steps:
+### A. Install over Wi-Fi, from the LAN address (no cable)
 
-1. On the computer: `npm run phone` (leave it running).
-2. Phone Chrome → open `http://teekky.local:4173` to check the name
-   resolves. If it loads, continue. If it does not, Android is not
-   resolving mDNS on your network — fall back to route B.
-3. Phone Chrome → `chrome://flags`
-4. Search **Insecure origins treated as secure**, set the dropdown to
+1. On the computer: `npm run phone`, and leave the terminal open.
+   It prints the address; here `http://192.168.1.173:4173`.
+2. Phone Chrome → `chrome://flags`
+3. Search **Insecure origins treated as secure** → set the dropdown to
    *Enabled*.
-5. In its text box, type the origin exactly, port included:
-   `http://teekky.local:4173`
-6. Tap **Relaunch** — the blue button that appears at the bottom of the
-   flags page. This only restarts Chrome so the setting takes effect. It
-   installs nothing.
-7. Load `http://teekky.local:4173` again → menu ⋮ → **Add to Home screen**
-   → Install.
+4. In its text box, type the origin exactly, port included:
+   `http://192.168.1.173:4173`
+5. Tap **Relaunch** — the blue button at the bottom of the flags page. It
+   only restarts Chrome so the setting takes effect. It installs nothing.
+6. Load the address again → menu ⋮ → **Add to Home screen** → Install.
 
-The flag lowers the security bar for that one origin and nothing else, and
-`.local` names cannot be resolved from outside your network.
+The flag lowers the security bar for that one origin and nothing else.
 
-Vite refuses unfamiliar `Host` headers with a 403 by default; `.local` is
-allowlisted in `vite.config.ts` (`preview.allowedHosts`) so this works.
+**The catch, and how to live with it.** The address comes from your router's
+DHCP, on a 24-hour renewing lease. A machine that stays connected keeps the
+same address for months at a time, but it is not a guarantee: a long absence
+or a router reboot can move you to `.174`, and the installed app would then
+point at an origin nobody answers on.
+
+If that happens, nothing is lost *provided you have an exported backup*:
+reinstall from the new address and import the file. So once the phone has a
+few sessions on it, do this once, from the phone:
+
+> Settings → Backup & restore → **Download a backup**
+
+The file lands in Downloads and is origin-independent — it is the one copy
+that survives an address change, a reinstall, or clearing site data. The
+automatic snapshots do not help here: they live in IndexedDB, under the same
+origin as everything else.
 
 ### B. USB port forwarding (fallback)
 
