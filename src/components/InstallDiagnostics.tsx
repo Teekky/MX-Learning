@@ -48,9 +48,9 @@ async function runChecks(): Promise<Report> {
       ? 'This origin counts as secure.'
       : 'Served over plain http on a non-local address.',
     fix:
-      'On the phone: chrome://flags → "Insecure origins treated as secure" → Enabled, ' +
-      `then put exactly ${window.location.origin} in its box — no trailing slash, ` +
-      'no path — and tap Relaunch.',
+      'In chrome://flags the entry has TWO controls: a text box and a dropdown. ' +
+      'Paste the origin in the box AND set the dropdown to Enabled — the text ' +
+      'alone does nothing. Then tap Relaunch.',
   })
 
   /* 2. Service worker support. */
@@ -133,6 +133,7 @@ async function runChecks(): Promise<Report> {
 export function InstallDiagnostics() {
   const [report, setReport] = useState<Report | null>(null)
   const [busy, setBusy] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const refresh = useCallback(() => {
     setBusy(true)
@@ -182,6 +183,31 @@ export function InstallDiagnostics() {
           <strong>{failing.label}</strong> is what is blocking the install.
           {failing.fix && <> {failing.fix}</>}
         </Notice>
+      )}
+
+      {/* Typing an origin by hand on a phone keyboard is where this usually
+          goes wrong — a trailing slash or a dropped port is enough. */}
+      {failing?.id === 'secure' && report && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border-hair border-border bg-bg-subtle px-4 py-3">
+          <code className="min-w-0 flex-1 break-all font-mono text-sm text-text">
+            {report.origin}
+          </code>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              void navigator.clipboard
+                ?.writeText(report.origin)
+                .then(() => {
+                  setCopied(true)
+                  setTimeout(() => setCopied(false), 2000)
+                })
+                .catch(() => undefined)
+            }}
+          >
+            {copied ? 'Copied' : 'Copy'}
+          </Button>
+        </div>
       )}
 
       <ul className="space-y-2">
