@@ -22,7 +22,7 @@
  */
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -32,7 +32,9 @@ import {
   getAllCardsByWordId,
   getAllWords,
 } from '@/db/queries'
-import { PageLoader } from '@/components/PageLoader'
+import { Button, buttonClass, EmptyState, PageLoader, Sheet } from '@/components/ui'
+import { WordForm } from '@/components/WordForm'
+import { useAppStore } from '@/store/useAppStore'
 import type { Level, SRSCard, Word } from '@/types'
 
 const LEVELS: Level[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
@@ -71,6 +73,9 @@ export function DeckPage() {
   const [clearingSeed, setClearingSeed] = useState<'idle' | 'confirm' | 'busy'>(
     'idle',
   )
+  /* `null` = closed, `'new'` = create, a Word = edit that entry. */
+  const [composer, setComposer] = useState<'new' | Word | null>(null)
+  const pushToast = useAppStore((s) => s.pushToast)
 
   useEffect(() => {
     void refresh()
@@ -277,27 +282,41 @@ export function DeckPage() {
 
   if (words.length === 0) {
     return (
-      <div className="mx-auto max-w-xl space-y-4 py-16 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent-subtle">
-          <span className="text-2xl text-accent">◈</span>
-        </div>
-        <h1 className="font-display text-2xl font-semibold">
-          Your deck is empty.
-        </h1>
-        <p className="text-text-muted">
-          Your deck grows as you learn. Try{' '}
-          <strong className="text-text">Learn from anything</strong> to teach
-          yourself a single word, or paste a piece of text and drill the
-          vocabulary worth keeping. Anything you review lands here.
-        </p>
-        <div className="flex justify-center gap-3 pt-2">
-          <Link to="/practice/import" className="btn-primary">
-            Learn from anything
+      <div className="mx-auto max-w-xl py-10">
+        <EmptyState
+          icon={<Plus size={26} />}
+          title="Add the first word"
+          body="Type one in yourself, pull a native expression from the idiom library, or paste an article and let the tutor pull the vocabulary out. Everything you review ends up here."
+        >
+          <Button leading={<Plus size={18} />} onClick={() => setComposer('new')}>
+            Add a word
+          </Button>
+          <Link to="/idioms" className={buttonClass('ghost')}>
+            Browse idioms
           </Link>
-          <Link to="/practice" className="btn-ghost">
-            Browse all modes
+          <Link to="/practice/import" className={buttonClass('ghost')}>
+            Learn from a text
           </Link>
-        </div>
+        </EmptyState>
+
+        <WordComposer
+          state={composer}
+          onClose={() => setComposer(null)}
+          onSaved={async (status) => {
+            setComposer(null)
+            await refresh()
+            pushToast({
+              kind: 'info',
+              icon: status === 'duplicate' ? '·' : '✦',
+              title:
+                status === 'duplicate'
+                  ? 'That word is already in your deck'
+                  : status === 'updated'
+                    ? 'Changes saved'
+                    : 'Word added — due on your next review',
+            })
+          }}
+        />
       </div>
     )
   }
@@ -314,7 +333,7 @@ export function DeckPage() {
             Every word stored locally on this device.
           </p>
         </div>
-        <div className="flex gap-6 text-sm">
+        <div className="flex flex-wrap items-center gap-6 text-sm">
           <Summary label="Total" value={words.length} />
           {bySource.user > 0 && (
             <Summary label="Imported" value={bySource.user} />
@@ -322,8 +341,30 @@ export function DeckPage() {
           {bySource.mistral > 0 && (
             <Summary label="AI" value={bySource.mistral} />
           )}
+          <Button leading={<Plus size={18} />} onClick={() => setComposer('new')}>
+            Add a word
+          </Button>
         </div>
       </header>
+
+      <WordComposer
+        state={composer}
+        onClose={() => setComposer(null)}
+        onSaved={async (status) => {
+          setComposer(null)
+          await refresh()
+          pushToast({
+            kind: 'info',
+            icon: status === 'duplicate' ? '·' : '✦',
+            title:
+              status === 'duplicate'
+                ? 'That word is already in your deck'
+                : status === 'updated'
+                  ? 'Changes saved'
+                  : 'Word added — due on your next review',
+          })
+        }}
+      />
 
       {/* Curated-words cleanup banner (legacy installs only) */}
       {bySource.seed > 0 && (
@@ -582,6 +623,7 @@ export function DeckPage() {
                       onConfirmDelete={() => {
                         if (w.id != null) void confirmDelete(w.id)
                       }}
+                      onEdit={() => setComposer(w)}
                     />
                   ))}
                 </AnimatePresence>
@@ -607,15 +649,20 @@ export function DeckPage() {
                 onConfirmDelete={() => {
                   if (w.id != null) void confirmDelete(w.id)
                 }}
+                onEdit={() => setComposer(w)}
               />
             ))}
           </AnimatePresence>
         </div>
       )}
 
-      <div className="flex justify-center pt-4">
-        <Link to="/practice/import" className="btn-ghost">
-          + Learn another word
+      {/* Bottom actions — where the thumb already is after scrolling. */}
+      <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:justify-center">
+        <Button leading={<Plus size={18} />} onClick={() => setComposer('new')}>
+          Add a word
+        </Button>
+        <Link to="/practice/import" className={buttonClass('ghost')}>
+          Learn from a text
         </Link>
       </div>
     </div>
@@ -633,6 +680,7 @@ function WordRow({
   onAskDelete,
   onCancelDelete,
   onConfirmDelete,
+  onEdit,
 }: {
   word: Word
   card: SRSCard | undefined
@@ -642,6 +690,7 @@ function WordRow({
   onAskDelete: () => void
   onCancelDelete: () => void
   onConfirmDelete: () => void
+  onEdit: () => void
 }) {
   const firstExample = word.examples?.[0]
   return (
@@ -722,17 +771,67 @@ function WordRow({
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={onAskDelete}
-          aria-label={`Remove ${word.lemma} from deck`}
-          title="Remove from deck"
-          className="shrink-0 rounded-lg p-2 text-text-subtle transition hover:bg-bg-subtle hover:text-warning"
-        >
-          ✕
-        </button>
+        <div className="flex shrink-0 gap-1">
+          <button
+            type="button"
+            onClick={onEdit}
+            aria-label={`Edit ${word.lemma}`}
+            title="Edit"
+            className="press flex h-tap w-tap items-center justify-center rounded-lg text-text-subtle hover:bg-bg-subtle hover:text-text"
+          >
+            <Pencil size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={onAskDelete}
+            aria-label={`Remove ${word.lemma} from deck`}
+            title="Remove from deck"
+            className="press flex h-tap w-tap items-center justify-center rounded-lg text-text-subtle hover:bg-bg-subtle hover:text-warning"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       )}
     </motion.div>
+  )
+}
+
+/* ============================ Word composer ============================= */
+
+/**
+ * The add/edit sheet. Rendered once per page rather than once per row, so
+ * five hundred deck entries do not mount five hundred dialogs.
+ */
+function WordComposer({
+  state,
+  onClose,
+  onSaved,
+}: {
+  state: 'new' | Word | null
+  onClose: () => void
+  onSaved: (status: 'added' | 'updated' | 'duplicate') => void
+}) {
+  const editing = state !== null && state !== 'new' ? state : undefined
+  return (
+    <Sheet
+      open={state !== null}
+      onClose={onClose}
+      title={editing ? `Edit “${editing.lemma}”` : 'Add a word'}
+      description={
+        editing
+          ? 'Its review history and schedule are left untouched.'
+          : 'It goes into your deck and is due on your next review.'
+      }
+    >
+      {state !== null && (
+        <WordForm
+          key={editing?.id ?? 'new'}
+          word={editing}
+          onSaved={(r) => onSaved(r.status)}
+          onCancel={onClose}
+        />
+      )}
+    </Sheet>
   )
 }
 

@@ -9,7 +9,9 @@ import { useAppStore } from '@/store/useAppStore'
 import { listEnglishVoices, speak } from '@/audio/tts'
 import { hasMistralKey } from '@/ai/mistral'
 import { db } from '@/db/database'
-import { PageLoader } from '@/components/PageLoader'
+import { PageLoader } from '@/components/ui'
+import { BackupPanel } from '@/components/BackupPanel'
+import { InstallDiagnostics } from '@/components/InstallDiagnostics'
 import type { Level } from '@/types'
 
 const CEFR_LEVELS: Level[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
@@ -259,6 +261,12 @@ export function SettingsPage() {
           Negative = easier · 0 = adaptive · Positive = harder.
         </p>
       </section>
+
+      {/* Backup — first thing to reach for before any risky change. */}
+      <BackupPanel />
+
+      {/* Why the phone offers a shortcut instead of an install. */}
+      <InstallDiagnostics />
 
       {/* AI connection */}
       <section className="card space-y-3">

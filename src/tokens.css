@@ -1,0 +1,244 @@
+/* ===================================================================
+   MX Learning — design tokens
+   ===================================================================
+   Single source of truth for every visual decision in the app. Nothing
+   below this file should contain a raw hex value, a magic pixel radius,
+   or a hand-picked animation duration: components consume these tokens
+   through Tailwind (see tailwind.config.js, which mirrors them 1:1).
+
+   Direction: "soft neo-brutalism" — warm paper ground, near-black ink,
+   cobalt accent. Borders are visible and deliberate, shadows are hard
+   offsets with no blur, radii are generous enough to keep the whole
+   thing friendly rather than aggressive.
+
+   Colours are stored as space-separated RGB channels, not hex, so that
+   Tailwind's `<alpha-value>` machinery keeps working: `bg-accent/12`,
+   `text-ink-muted/60`, and so on.
+   ================================================================= */
+
+/* ------------------------------------------------------------------ */
+/*  Palette — light (default, no class on <html>)                     */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* Surfaces: warm paper, going lighter as elements come forward. */
+  --color-bg: 247 243 238; /* #F7F3EE  warm paper */
+  --color-bg-elevated: 255 255 255; /* #FFFFFF  cards, sheets */
+  --color-bg-subtle: 239 232 223; /* #EFE8DF  sunken wells, tracks */
+
+  /* Ink. `text` is the near-black; muted/subtle step down in contrast. */
+  --color-text: 26 22 20; /* #1A1614 */
+  --color-text-muted: 92 83 76; /* #5C534C */
+  --color-text-subtle: 140 128 120; /* #8C8078 */
+
+  /* Lines. `border` is the everyday hairline; `ink-line` is one step
+     stronger, for surfaces that need a little more definition. Neither is
+     a hard black stroke — outlines that heavy fight with the text. */
+  --color-border: 221 212 200; /* #DDD4C8 */
+  --color-border-subtle: 236 229 220; /* #ECE5DC */
+  --color-ink-line: 196 184 169; /* #C4B8A9 */
+
+  /* Accent — a deep, desaturated blue. The earlier electric cobalt was
+     too loud on a cream ground: at full saturation it vibrates against
+     the warm background and is genuinely tiring to read next to. */
+  --color-accent: 48 76 166; /* #304CA6 */
+  --color-accent-hover: 38 61 133; /* #263D85 */
+  --color-on-accent: 255 255 255;
+
+  /* Semantics. Sage / amber / terracotta, tuned for contrast on paper. */
+  --color-success: 34 138 92; /* #228A5C  sage */
+  --color-warning: 176 106 16; /* #B06A10  amber */
+  --color-danger: 193 74 42; /* #C14A2A  terracotta */
+
+  /* Grading scale for the review screen — one colour per answer button. */
+  --color-grade-again: 193 74 42; /* terracotta */
+  --color-grade-hard: 176 106 16; /* amber */
+  --color-grade-good: 48 76 166; /* accent blue */
+  --color-grade-easy: 34 138 92; /* sage */
+
+  /* Shadow ink + strength — see --shadow-* below. */
+  --shadow-color: 42 34 28;
+  --shadow-strength: 1;
+
+  color-scheme: light;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Palette — dark                                                     */
+/* ------------------------------------------------------------------ */
+
+:root.dark {
+  --color-bg: 19 17 16; /* #131110 */
+  --color-bg-elevated: 29 26 24; /* #1D1A18 */
+  --color-bg-subtle: 38 34 32; /* #262220 */
+
+  --color-text: 242 237 231; /* #F2EDE7 */
+  --color-text-muted: 179 168 158; /* #B3A89E */
+  --color-text-subtle: 127 116 108; /* #7F746C */
+
+  --color-border: 58 51 48; /* #3A3330 */
+  --color-border-subtle: 42 37 35; /* #2A2523 */
+  /* On a dark ground the stronger line has to be lighter than the surface,
+     otherwise it disappears entirely. */
+  --color-ink-line: 82 73 67; /* #524943 */
+
+  /* Softened to match the light theme's calmer accent. */
+  --color-accent: 134 157 234; /* #869DEA */
+  --color-accent-hover: 157 177 240; /* #9DB1F0 */
+  --color-on-accent: 15 14 13;
+
+  --color-success: 79 194 140; /* #4FC28C */
+  --color-warning: 255 196 107; /* #FFC46B */
+  --color-danger: 255 131 96; /* #FF8360 */
+
+  --color-grade-again: 255 131 96;
+  --color-grade-hard: 255 196 107;
+  --color-grade-good: 134 157 234;
+  --color-grade-easy: 79 194 140;
+
+  --shadow-color: 0 0 0;
+  --shadow-strength: 2.4;
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Typography                                                         */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* Both families are self-hosted (@fontsource-variable) so the app keeps
+     its voice offline and needs no third-party origin in the CSP. */
+  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
+
+  /* Fraunces axes: SOFT rounds the terminals, WONK lets the quirky
+     alternates through. This pair is the whole "soft brutalism" voice —
+     a heavy slab that is warm rather than shouty. */
+  --display-variation: 'SOFT' 60, 'WONK' 1, 'opsz' 36;
+
+  /* Type scale — 1.25 minor third, anchored at 16px. */
+  --text-2xs: 0.6875rem; /* 11px — badges, tiny meta */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-lg: 1.25rem; /* 20px */
+  --text-xl: 1.5rem; /* 24px */
+  --text-2xl: 1.875rem; /* 30px */
+  --text-3xl: 2.375rem; /* 38px */
+  --text-4xl: 3rem; /* 48px — the review card's word */
+  --text-5xl: 3.75rem; /* 60px */
+
+  /* Card-title size, fluid between the phone and the desktop: 18px on a
+     narrow screen, settling at 22px from roughly 1000px up. Fixed sizes
+     would either be cramped on the S22 or oversized in a 3-column grid. */
+  --text-tile: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);
+
+  --tracking-tight: -0.02em;
+  --tracking-display: -0.03em;
+  --tracking-wide: 0.08em;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Space, radius, borders                                             */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* 4px rhythm. Named rather than numbered so intent survives refactors. */
+  --space-1: 0.25rem; /* 4  */
+  --space-2: 0.5rem; /* 8  */
+  --space-3: 0.75rem; /* 12 */
+  --space-4: 1rem; /* 16 */
+  --space-5: 1.25rem; /* 20 */
+  --space-6: 1.5rem; /* 24 */
+  --space-8: 2rem; /* 32 */
+  --space-10: 2.5rem; /* 40 */
+  --space-12: 3rem; /* 48 */
+  --space-16: 4rem; /* 64 */
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-2xl: 34px;
+  --radius-pill: 999px;
+
+  /* Two stroke weights: hairline for structure, ink for statements. */
+  --border-hair: 1px;
+  --border-ink: 2px;
+
+  /* Smallest comfortable touch target — Android guidance is 48dp. Every
+     interactive element in the app must meet this on coarse pointers. */
+  --tap-min: 48px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Elevation                                                          */
+/* ------------------------------------------------------------------ */
+
+/* Soft, diffuse, and used sparingly. An earlier revision used hard offset
+   shadows on every button; they made ordinary controls shout. Elevation
+   now means "this floats above the page" — a sheet, a toast, a menu — and
+   nothing else. Flat elements are separated by a hairline border instead.
+
+   `--shadow-strength` is a multiplier, so the dark theme can deepen every
+   step at once without redefining them. */
+:root {
+  --shadow-xs: 0 1px 2px rgb(var(--shadow-color) / calc(0.05 * var(--shadow-strength)));
+  --shadow-sm: 0 2px 6px -1px rgb(var(--shadow-color) / calc(0.07 * var(--shadow-strength)));
+  --shadow-md: 0 6px 16px -6px rgb(var(--shadow-color) / calc(0.10 * var(--shadow-strength)));
+  --shadow-lg: 0 12px 28px -10px rgb(var(--shadow-color) / calc(0.13 * var(--shadow-strength)));
+  --shadow-xl: 0 24px 48px -16px rgb(var(--shadow-color) / calc(0.16 * var(--shadow-strength)));
+  --shadow-none: 0 0 0 rgb(var(--shadow-color) / 0);
+  /* Sheets and toasts sitting over the whole page. */
+  --shadow-float: 0 18px 48px -12px rgb(var(--shadow-color) / calc(0.20 * var(--shadow-strength)));
+}
+
+/* ------------------------------------------------------------------ */
+/*  Motion                                                             */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --dur-instant: 90ms;
+  --dur-fast: 140ms;
+  --dur-base: 220ms;
+  --dur-slow: 380ms;
+  --dur-reveal: 520ms; /* the review card flip */
+
+  /* Expo-out: fast start, long settle. Reads as "responsive" at 120 Hz. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Slight overshoot, for things that pop into existence. */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Respect the OS setting. Everything still happens — just instantly. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 1ms;
+    --dur-fast: 1ms;
+    --dur-base: 1ms;
+    --dur-slow: 1ms;
+    --dur-reveal: 1ms;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Device insets                                                      */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* Gesture bar, notch, and the curved edges of a Galaxy S22 Ultra.
+     `--edge-gutter` is the minimum horizontal breathing room for anything
+     touchable: on a curved screen, content flush to the edge is both hard
+     to hit and visually distorted. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --edge-gutter: 16px;
+
+  /* Height of the mobile bottom navigation bar, excluding the safe area. */
+  --bottom-nav-h: 60px;
+}

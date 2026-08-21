@@ -20,6 +20,7 @@ import { tutorOpener, tutorReply } from '@/ai/tutor'
 import type { ChatMessage } from '@/ai/chat'
 import { recordReview } from '@/utils/dailyLog'
 import { useAppStore } from '@/store/useAppStore'
+import { useCoarsePointer } from '@/utils/usePointer'
 
 const XP_PER_MESSAGE = 3
 const XP_CLEAN_BONUS = 2 // +2 when the user message needed no correction
@@ -48,6 +49,7 @@ export function WritingChatSession() {
   const registerCorrect = useAppStore((s) => s.registerCorrect)
   const notifyDailyLog = useAppStore((s) => s.notifyDailyLog)
   const stats = useAppStore((s) => s.stats)
+  const coarsePointer = useCoarsePointer()
 
   const [state, setState] = useState<State>(() =>
     hasMistralKey()
@@ -257,7 +259,7 @@ export function WritingChatSession() {
       </div>
 
       {/* Composer */}
-      <div className="mt-3 flex gap-3">
+      <div className="answer-row mt-3">
         <textarea
           ref={inputRef}
           value={value}
@@ -268,9 +270,15 @@ export function WritingChatSession() {
               send()
             }
           }}
-          placeholder="Type in English — Shift+Enter for a new line."
+          /* The keyboard instruction is dropped on touch devices, where
+             there is no Enter to press and no Shift to hold. */
+          placeholder={
+            coarsePointer
+              ? 'Type in English…'
+              : 'Type in English — Shift+Enter for a new line.'
+          }
           rows={2}
-          className="input flex-1 resize-none text-base"
+          className="input resize-none text-base"
           disabled={state.sending}
         />
         <button

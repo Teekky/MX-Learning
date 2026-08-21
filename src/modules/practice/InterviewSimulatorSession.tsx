@@ -30,6 +30,7 @@ import {
 import { recordReview } from '@/utils/dailyLog'
 import { useAppStore } from '@/store/useAppStore'
 import { isSTTSupported, startRecognition, type STTHandle } from '@/audio/stt'
+import { KeyHint } from '@/components/ui'
 
 const XP_PER_ANSWER = 4
 const XP_COMPLETION_BONUS = 15 // on wrap-up
@@ -499,7 +500,9 @@ export function InterviewSimulatorSession() {
       )}
 
       {/* Composer: mic + editable draft + send (mirrors AudioChatSession) */}
-      <div className="mt-4 flex items-start gap-3">
+      {/* `flex-wrap` plus an explicit basis keeps the mic and the field on
+          one line and drops Send onto its own full-width row on a phone. */}
+      <div className="mt-4 flex flex-wrap items-start gap-3">
         {sttSupported && (
           <MicButton
             listening={state.mic === 'listening'}
@@ -507,7 +510,13 @@ export function InterviewSimulatorSession() {
             onToggle={toggleMic}
           />
         )}
-        <div className="flex-1">
+        <div
+          className={
+            sttSupported
+              ? 'min-w-0 basis-[calc(100%-3.75rem)] sm:flex-1 sm:basis-auto'
+              : 'min-w-0 flex-1'
+          }
+        >
           <textarea
             ref={draftRef}
             value={state.draft}
@@ -533,20 +542,26 @@ export function InterviewSimulatorSession() {
             disabled={state.sending}
             className="input w-full resize-none text-base"
           />
-          <p className="mt-1 text-[11px] text-text-subtle">
-            {state.permissionDenied
-              ? 'Microphone access denied — enable it in browser settings.'
-              : !sttSupported
-                ? 'Speech input not supported here — type your answer (Enter to send).'
-                : state.mic === 'listening'
-                  ? 'Listening — press Space to stop, Enter to send.'
-                  : 'Press Space to toggle the mic · Enter to send.'}
-          </p>
+          {state.permissionDenied ? (
+            <p className="mt-1 text-xs text-warning">
+              Microphone access denied — enable it in browser settings.
+            </p>
+          ) : !sttSupported ? (
+            <p className="mt-1 text-xs text-text-subtle">
+              Speech input not supported here — type your answer instead.
+            </p>
+          ) : (
+            <KeyHint className="mt-1 text-left">
+              {state.mic === 'listening'
+                ? 'Listening — press Space to stop, Enter to send.'
+                : 'Press Space to toggle the mic · Enter to send.'}
+            </KeyHint>
+          )}
         </div>
         <button
           onClick={send}
           disabled={!canSend}
-          className="btn-primary self-start disabled:opacity-40"
+          className="btn-primary w-full self-start disabled:opacity-40 sm:w-auto"
         >
           Send
         </button>

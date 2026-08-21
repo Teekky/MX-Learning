@@ -45,13 +45,19 @@ import { xpForReview } from '@/utils/levels'
 import { recordReview } from '@/utils/dailyLog'
 import { useAppStore } from '@/store/useAppStore'
 import { speak } from '@/audio/tts'
-import {
-  FillInBlankExercise,
-  type FillInBlankResult,
-} from './FillInBlankExercise'
+import type { FillInBlankResult } from './FillInBlankExercise'
+import { RecallExercise } from './RecallExercise'
+import { shuffled } from '@/utils/shuffle'
 import type { Level, Review, Word } from '@/types'
 
 const MAX_TEXT_CHARS = 6000
+
+/**
+ * Index of the example sentence withheld from the teaching card and saved
+ * for the drill's second hint. `teachWord` returns three; showing two and
+ * keeping one back means the hint is a sentence you have not already read.
+ */
+const HELD_BACK_EXAMPLE_INDEX = 2
 
 type Mode = 'word' | 'text'
 
@@ -165,7 +171,10 @@ export function ImportTextSession() {
     setState({
       kind: 'running',
       mode: state.mode,
-      pairs: state.pairs,
+      // Drilled in a different order than they were taught. Reading order
+      // gives away the answer through position alone — the fourth word on
+      // the teaching card is the fourth word you are asked about.
+      pairs: state.pairs.length > 1 ? shuffled(state.pairs) : state.pairs,
       current: 0,
       correct: 0,
       xp: 0,
@@ -337,13 +346,17 @@ export function ImportTextSession() {
   const pair = state.pairs[state.current]
   return (
     <AnimatePresence mode="wait">
-      <FillInBlankExercise
+      {/* Recall, not fill-in-the-blank. The teaching card is thirty seconds
+          old; blanking a sentence the learner has just read tests copying,
+          not memory. Here the meaning is the prompt and the word is the
+          answer — and the sentence is only available as a costed hint. */}
+      <RecallExercise
         key={pair.key}
         word={pair.word}
-        card={pair.card}
         onDone={handleResult}
         index={state.current + 1}
         total={state.pairs.length}
+        hiddenExampleIndex={HELD_BACK_EXAMPLE_INDEX}
       />
     </AnimatePresence>
   )
@@ -585,7 +598,10 @@ function TeachPanel({
             <div className="text-xs uppercase tracking-wider text-text-subtle">
               In context
             </div>
-            {taught.examples.map((ex, i) => (
+            {/* One example is deliberately withheld and kept for the drill's
+                sentence hint — otherwise every hint is something you read a
+                minute ago. */}
+            {taught.examples.slice(0, HELD_BACK_EXAMPLE_INDEX).map((ex, i) => (
               <div
                 key={i}
                 className="flex items-start gap-3 rounded-xl border border-border/60 bg-bg-subtle/40 px-3 py-2"

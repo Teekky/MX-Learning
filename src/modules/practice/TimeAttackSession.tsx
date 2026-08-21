@@ -20,6 +20,7 @@ import { recordReview } from '@/utils/dailyLog'
 import { compareAnswer } from '@/utils/strings'
 import { playBuzz, playDing, vibrate } from '@/audio/sfx'
 import { allowedLevelsFor } from '@/utils/levelFilter'
+import { SessionComplete } from './SessionComplete'
 
 const DURATION_SECONDS = 60
 const XP_PER_CORRECT = 5
@@ -227,29 +228,16 @@ export function TimeAttackSession() {
     const total = phase.correct + phase.wrong
     const accuracy = total === 0 ? 0 : Math.round((phase.correct / total) * 100)
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mx-auto max-w-xl space-y-6 text-center"
-      >
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-accent shadow-2xl shadow-accent/40">
-          <span className="font-display text-4xl">⏱</span>
-        </div>
-        <h1 className="font-display text-3xl font-semibold">Time's up.</h1>
-        <div className="card grid grid-cols-3 gap-6">
-          <SummaryStat label="Correct" value={`${phase.correct}`} />
-          <SummaryStat label="Accuracy" value={`${accuracy}%`} />
-          <SummaryStat label="XP earned" value={`+${phase.xp}`} />
-        </div>
-        <div className="flex justify-center gap-3">
-          <Link to="/practice" className="btn-ghost">
-            Back to menu
-          </Link>
-          <button onClick={() => navigate(0)} className="btn-primary">
-            Another round
-          </button>
-        </div>
-      </motion.div>
+      <SessionComplete
+        icon="⏱"
+        title="Time's up."
+        stats={[
+          { label: 'Correct', value: phase.correct },
+          { label: 'Accuracy', value: `${accuracy}%` },
+          { label: 'XP earned', value: `+${phase.xp}` },
+        ]}
+        onRepeat={() => navigate(0)}
+      />
     )
   }
 
@@ -350,18 +338,6 @@ function Timer({ secondsLeft, total }: { secondsLeft: number; total: number }) {
   )
 }
 
-function SummaryStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="text-xs uppercase tracking-wider text-text-subtle">
-        {label}
-      </div>
-      <div className="mt-1 font-display text-2xl font-semibold text-text">
-        {value}
-      </div>
-    </div>
-  )
-}
 
 function shuffle<T>(arr: T[]): T[] {
   const a = arr.slice()

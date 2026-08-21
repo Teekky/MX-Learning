@@ -15,6 +15,7 @@ export type PartOfSpeech =
   | 'preposition'
   | 'conjunction'
   | 'pronoun'
+  | 'determiner'
   | 'interjection'
   | 'phrase'
   | 'idiom'
@@ -44,10 +45,32 @@ export interface Word {
   addedAt: number
   /** Whether this word came from the seed set or was added dynamically. */
   source: 'seed' | 'mistral' | 'user' | 'session'
+
+  /* --- Idiom-specific metadata (partOfSpeech === 'idiom' | 'phrase') --- */
+
+  /**
+   * How the expression lands socially. Idioms are register-sensitive in a way
+   * single words rarely are — "spill the beans" in a board meeting reads very
+   * differently from "disclose". Displayed as a badge so the learner knows
+   * where an expression is safe to use.
+   */
+  register?: 'informal' | 'neutral' | 'formal'
+  /**
+   * Regional variant. `both` means the expression travels; `BrE`/`AmE` warn
+   * that the other side of the Atlantic will hear it as foreign.
+   */
+  variant?: 'BrE' | 'AmE' | 'both'
+  /**
+   * Literal reading, for idioms whose surface meaning is misleading
+   * (e.g. "bite the bullet" → "to bite a bullet"). Purely explanatory.
+   */
+  literal?: string
 }
 
 /** Type of exercise — drives Dynamic Weighting. */
 export type ExerciseType =
+  /** The signature review screen: recall a word from its front face alone. */
+  | 'flashcard'
   | 'fill-in-blank'
   | 'random-words-context'
   | 'time-attack'

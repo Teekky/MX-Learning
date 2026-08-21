@@ -37,6 +37,7 @@ import {
   type SpotErrorQuestion,
 } from './questions'
 import type { Level } from '@/types'
+import { Key, KeyHint } from '@/components/ui'
 
 /** A learner's answer: option index for choice-style, typed string for fill-blank. */
 type Answer = number | string | null
@@ -526,15 +527,15 @@ function FillBlankCard({
         {after}
       </p>
       {!revealed && (
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-text-subtle">
-            Press Enter or click Submit.
-          </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <KeyHint className="mt-0 text-left">
+            Press <Key>Enter</Key> or click Submit.
+          </KeyHint>
           <button
             type="button"
             onClick={commit}
             disabled={draft.trim().length === 0}
-            className="btn-ghost text-sm disabled:opacity-40"
+            className="btn-ghost w-full disabled:opacity-40 sm:w-auto"
           >
             Submit
           </button>

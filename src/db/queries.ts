@@ -92,6 +92,60 @@ export async function countWords(allowedLevels?: Level[]): Promise<number> {
   return db.words.filter((w) => allowSet.has(w.level)).count()
 }
 
+/**
+ * One pass over the deck for the dashboard's headline numbers.
+ *
+ * "Learned" is deliberately stricter than "seen once": a card counts only
+ * after two successful repetitions AND a week-long interval, which is the
+ * point at which recall stops being short-term memory. Anything less would
+ * let the number climb on the first evening and mean nothing afterwards.
+ */
+export interface DeckSummary {
+  /** Every entry in the deck. */
+  total: number
+  /** Cards that have survived to a ≥ 6-day interval. */
+  learned: number
+  /** Seen at least once, but not yet learned. */
+  learning: number
+  /** Never reviewed. */
+  fresh: number
+  /** Due right now. */
+  due: number
+}
+
+export async function getDeckSummary(): Promise<DeckSummary> {
+  const now = Date.now()
+  const cards = await db.cards.toArray()
+  const summary: DeckSummary = {
+    total: cards.length,
+    learned: 0,
+    learning: 0,
+    fresh: 0,
+    due: 0,
+  }
+  for (const c of cards) {
+    if (c.due <= now) summary.due++
+    if (!c.lastReviewed) summary.fresh++
+    else if (c.repetition >= 2 && c.intervalDays >= 6) summary.learned++
+    else summary.learning++
+  }
+  return summary
+}
+
+/**
+ * Retention over the last `days` days: the share of reviews the user got
+ * right. Computed from the review log rather than the daily rollup so it
+ * survives a rollup gap, and returns `null` when there is nothing to
+ * average — an honest "—" beats a confident 0%.
+ */
+export async function getRetention(days = 30): Promise<number | null> {
+  const since = Date.now() - days * 86_400_000
+  const reviews = await db.reviews.where('timestamp').aboveOrEqual(since).toArray()
+  if (reviews.length === 0) return null
+  const correct = reviews.reduce((n, r) => n + (r.wasCorrect ? 1 : 0), 0)
+  return correct / reviews.length
+}
+
 /** All words at/under the user's level (+ stretch), for non-SRS modes. */
 export async function getWordsAtLevel(
   allowedLevels: Level[],

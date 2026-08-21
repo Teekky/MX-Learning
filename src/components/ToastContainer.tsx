@@ -43,15 +43,23 @@ function ToastCard({ toast }: { toast: Toast }) {
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 24, scale: 0.96 }}
       transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-      className="pointer-events-auto flex w-full items-start gap-3 rounded-xl border border-border bg-bg-elevated p-4 text-left shadow-2xl shadow-black/40 hover:border-text-subtle"
+      /* Vertically centred when the toast is a single line, top-aligned only
+         when there is a body to align *to*. Centring both ways left the
+         title floating above an oversized icon. */
+      className={`pointer-events-auto flex w-full gap-3 rounded-xl border-hair border-border bg-bg-elevated p-4 text-left shadow-float hover:border-text-subtle ${
+        toast.body ? 'items-start' : 'items-center'
+      }`}
     >
       {toast.icon && (
-        <span className="mt-0.5 text-2xl leading-none text-accent">
+        <span
+          className="flex h-6 w-6 shrink-0 items-center justify-center text-lg leading-none text-accent"
+          aria-hidden
+        >
           {toast.icon}
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <div className="font-display text-sm font-semibold text-text">
+        <div className="text-sm font-semibold text-text">
           {toast.title}
         </div>
         {toast.body && (
