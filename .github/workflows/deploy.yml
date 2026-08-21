@@ -21,34 +21,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '24'
+          node-version: '22'
           cache: 'npm'
 
-      - name: Clean npm cache
-        run: npm cache clean --force
-
       - name: Install dependencies
-        run: npm install --legacy-peer-deps --prefer-offline
+        run: npm ci
 
-      - name: Build (without API key — offline mode)
+      # A project site is served from https://<user>.github.io/<repo>/, so the
+      # build needs that prefix baked into every asset URL and into the
+      # service worker scope. Locally BASE_PATH is unset and stays "/".
+      - name: Build
         run: npm run build
         env:
-          VITE_MISTRAL_API_KEY: ""
-          VITE_MISTRAL_MODEL: "mistral-large-latest"
+          BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_MISTRAL_API_KEY: ''
+
+      # GitHub Pages has no SPA rewrite. Serving the same shell as 404 means a
+      # deep link (or a hard refresh on /review) still boots the app instead of
+      # showing Pages' own error page.
+      - name: SPA fallback
+        run: cp dist/index.html dist/404.html
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: 'dist'
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

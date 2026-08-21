@@ -98,8 +98,11 @@ function App() {
 
   const onboardingDone = settings?.onboardingComplete === true
 
+  /* GitHub Pages serves a project site from `/<repo>/`, not from the origin
+     root, so the router has to strip that prefix before matching. BASE_URL is
+     whatever Vite's `base` was at build time — "/" everywhere else. */
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       {/* Outside <Routes> on purpose: this is what registers the service
           worker, and it has to run on every route — including /onboarding,
           where a first-run visitor lands before the app shell ever mounts.

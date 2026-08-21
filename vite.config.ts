@@ -46,10 +46,21 @@ function cspPlugin(): Plugin {
   }
 }
 
+/**
+ * Where the app is served from.
+ *
+ * Locally that is the origin root. On GitHub Pages a project site lives under
+ * `/<repo>/`, so every asset URL, the service worker scope and the manifest
+ * have to carry that prefix or the page loads a blank shell. The CI workflow
+ * sets BASE_PATH; everything else keeps the plain root.
+ */
+const BASE = process.env.BASE_PATH ?? '/'
+
 // MX Learning — installable PWA, offline-first
 export default defineConfig(({ mode }) => {
   const isDemo = mode === 'demo'
   return {
+  base: BASE,
   plugins: [
     react(),
     cspPlugin(),
@@ -69,8 +80,8 @@ export default defineConfig(({ mode }) => {
         background_color: '#131110',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        scope: '/',
+        start_url: BASE,
+        scope: BASE,
         lang: 'en',
         categories: ['education', 'productivity'],
         icons: [
@@ -87,7 +98,7 @@ export default defineConfig(({ mode }) => {
           {
             name: 'Review due cards',
             short_name: 'Review',
-            url: '/review',
+            url: `${BASE}review`,
             description: 'Jump straight into today’s spaced-repetition queue.',
           },
         ],
@@ -98,7 +109,7 @@ export default defineConfig(({ mode }) => {
         // so the app is genuinely complete offline rather than half-cached.
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         cleanupOutdatedCaches: true,
-        navigateFallback: 'index.html',
+        navigateFallback: `${BASE}index.html`,
         // Mistral API calls should NOT be cached.
         navigateFallbackDenylist: [/^\/api/],
       },
