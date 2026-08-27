@@ -49,6 +49,7 @@ import type { FillInBlankResult } from './FillInBlankExercise'
 import { RecallExercise } from './RecallExercise'
 import { shuffled } from '@/utils/shuffle'
 import type { Level, Review, Word } from '@/types'
+import { noAutofill } from '@/utils/noAutofill'
 
 const MAX_TEXT_CHARS = 6000
 
@@ -247,7 +248,7 @@ export function ImportTextSession() {
     return (
       <Notice
         title="Mistral API key missing."
-        body="Add VITE_MISTRAL_API_KEY to .env.local to use Learn from anything."
+        body="Paste your own key in Settings → AI connection to use Learn from anything."
       />
     )
   }
@@ -435,8 +436,7 @@ function ChoosePanel({
             placeholder="e.g. leverage, on the fly, accountability…"
             className="input w-full text-lg"
             autoFocus
-            autoComplete="off"
-            autoCorrect="off"
+            {...noAutofill}
           />
           <p className="text-xs text-text-subtle">
             Inflected forms are fine — "leveraged", "stakeholders" both work.
@@ -450,6 +450,7 @@ function ChoosePanel({
             placeholder="Paste English text here. The richer and more professional, the better — design articles, product docs, founder essays all work great."
             className="input min-h-[260px] w-full resize-y text-base leading-relaxed"
             autoFocus
+            {...noAutofill}
           />
           <div className="flex items-center justify-between text-xs text-text-subtle">
             <span>

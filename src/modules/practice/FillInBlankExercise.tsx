@@ -18,6 +18,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { maskLemma, pickExample, qualityFromAnswer } from './fillInBlank'
 import type { Quality, SRSCard, Word } from '@/types'
 import { Key, KeyHint } from '@/components/ui'
+import { noAutofill } from '@/utils/noAutofill'
 
 export interface FillInBlankResult {
   quality: Quality
@@ -148,9 +149,7 @@ export function FillInBlankExercise({ word, card: _card, onDone, index, total }:
             readOnly={!!submitted}
             placeholder="Type the missing word…"
             className={`input text-lg ${submitted ? 'opacity-70' : ''}`}
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
+            {...noAutofill}
           />
           {!submitted ? (
             <button

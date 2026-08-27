@@ -23,6 +23,7 @@ import { shuffled } from '@/utils/shuffle'
 import { playBuzz, playDing, vibrate } from '@/audio/sfx'
 import type { Level } from '@/types'
 import { Key, KeyHint } from '@/components/ui'
+import { noAutofill } from '@/utils/noAutofill'
 
 const LEVEL_ORDER: Record<Level, number> = {
   A1: 0,
@@ -379,8 +380,7 @@ function PickPanel({
           onChange={(e) => setSearch(e.target.value)}
           placeholder={`Search ${topics.length} topics by name, blurb, or level…`}
           className="input w-full"
-          autoComplete="off"
-          spellCheck={false}
+          {...noAutofill}
         />
       </header>
 
@@ -721,8 +721,7 @@ function FillCard({
             }}
             disabled={revealed}
             placeholder="…"
-            autoComplete="off"
-            spellCheck={false}
+            {...noAutofill}
             className={
               'min-w-[110px] rounded-md border px-2 py-1 text-base font-display tracking-tight transition-colors ' +
               (revealed

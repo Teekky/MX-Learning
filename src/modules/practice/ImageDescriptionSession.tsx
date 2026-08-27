@@ -24,6 +24,7 @@ import {
 import { useAppStore } from '@/store/useAppStore'
 import { recordReview } from '@/utils/dailyLog'
 import { Key, KeyHint } from '@/components/ui'
+import { noAutofill } from '@/utils/noAutofill'
 
 const MAX_XP_PER_IMAGE = 20
 
@@ -227,12 +228,17 @@ export function ImageDescriptionSession() {
           Mistral API key missing.
         </h1>
         <p className="mb-6 text-text-muted">
-          Add <code className="rounded bg-bg-subtle px-1.5">VITE_MISTRAL_API_KEY</code> to
-          <code className="rounded bg-bg-subtle px-1.5"> .env.local</code> to use image description.
+          Paste your own key in Settings → AI connection to use image
+          description.
         </p>
-        <Link to="/practice" className="btn-ghost inline-flex">
-          ← Back to practice menu
-        </Link>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link to="/settings" className="btn-primary inline-flex">
+            Open settings
+          </Link>
+          <Link to="/practice" className="btn-ghost inline-flex">
+            ← Back to practice menu
+          </Link>
+        </div>
       </div>
     )
   }
@@ -353,6 +359,7 @@ export function ImageDescriptionSession() {
             rows={6}
             disabled={state.grading || !!state.grade}
             className="input w-full resize-none text-base"
+            {...noAutofill}
           />
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

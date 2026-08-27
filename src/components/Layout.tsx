@@ -8,6 +8,11 @@
  *   < md  a bottom navigation bar in the thumb arc, plus a drawer behind
  *         "More" for the screens you visit weekly rather than daily.
  *
+ * On a phone both chrome bars have to earn their space. The top bar (level,
+ * XP, streak) is a dashboard widget, so it shows on the dashboard and nowhere
+ * else. The bottom bar steps out entirely while a text field has focus —
+ * mid-answer you need the screen, not the navigation.
+ *
  * The review session does not use this shell at all — see App.tsx.
  */
 
@@ -21,6 +26,7 @@ import { TopBar } from './TopBar'
 import { countDue } from '@/db/queries'
 import { allowedLevelsFor } from '@/utils/levelFilter'
 import { useAppStore } from '@/store/useAppStore'
+import { useTextEntryFocus } from '@/utils/useTextEntryFocus'
 
 const STORAGE_KEY = 'mx:sidebar-collapsed'
 const MOBILE_BREAKPOINT_PX = 768
@@ -46,6 +52,7 @@ export function Layout() {
 
   const location = useLocation()
   const stats = useAppStore((s) => s.stats)
+  const typing = useTextEntryFocus()
   const sessionReviews = useAppStore((s) => s.session.reviewsDone)
 
   useEffect(() => {
@@ -91,6 +98,14 @@ export function Layout() {
       .catch(() => setDue(0))
   }, [stats?.cefrLevel, sessionReviews, location.pathname])
 
+  /* The XP/level row belongs to the dashboard on a phone: anywhere else it is
+     a permanent band of score-keeping above the content you opened the screen
+     for. Desktop has the height to spare, so it keeps the row everywhere. */
+  const showStats = !isMobile || location.pathname === '/'
+
+  /* Navigation yields the floor to the keyboard. */
+  const showBottomNav = isMobile && !typing
+
   return (
     <div className="flex min-h-[100dvh] bg-bg text-text">
       {/* --- Desktop sidebar ------------------------------------------ */}
@@ -117,20 +132,29 @@ export function Layout() {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar />
+        <TopBar showStats={showStats} />
         <main
           className={[
             'edge-x flex-1 py-5 md:px-8 md:py-6',
-            /* Clear the bottom bar (and the gesture bar under it) so the
-               last row of content is never trapped behind navigation. */
-            isMobile ? 'pb-[calc(var(--bottom-nav-h)+var(--safe-bottom)+var(--space-6))]' : '',
+            /* With no header above it, content would otherwise start under
+               the notch on a device that has one. */
+            showStats ? '' : 'pt-safe-t',
+            /* Clear the bottom bar (and the gesture bar under it) so the last
+               row of content is never trapped behind navigation. While the
+               keyboard is up there is no bar left to clear — only the gesture
+               area — and every pixel of the shrunken viewport counts. */
+            showBottomNav
+              ? 'pb-[calc(var(--bottom-nav-h)+var(--safe-bottom)+var(--space-6))]'
+              : isMobile
+                ? 'pb-[calc(var(--safe-bottom)+var(--space-4))]'
+                : '',
           ].join(' ')}
         >
           <Outlet />
         </main>
       </div>
 
-      {isMobile && (
+      {showBottomNav && (
         <BottomNav onMore={() => setDrawerOpen(true)} dueCount={due} />
       )}
 

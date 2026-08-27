@@ -43,6 +43,7 @@ import { EmptyDeckNotice } from './EmptyDeckNotice'
 import type { Quality, Review } from '@/types'
 import { Key, KeyHint } from '@/components/ui'
 import { SessionComplete } from './SessionComplete'
+import { noAutofill } from '@/utils/noAutofill'
 
 const MAX_CARDS_PER_SESSION = 8
 /** How many free replays before XP penalty kicks in. */
@@ -370,7 +371,7 @@ export function ListeningSession() {
     return (
       <Notice
         title="Mistral API key missing."
-        body="Add VITE_MISTRAL_API_KEY to .env.local to use the listening mode."
+        body="Paste your own key in Settings → AI connection to use the listening mode."
       />
     )
   }
@@ -495,9 +496,7 @@ export function ListeningSession() {
               placeholder="Type what you heard. Punctuation and capitalization don't count."
               rows={3}
               className={`input w-full resize-none text-base leading-relaxed ${submitted ? 'opacity-70' : ''}`}
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
+              {...noAutofill}
             />
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

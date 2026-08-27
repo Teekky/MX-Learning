@@ -36,6 +36,7 @@ import { maskLemma } from './fillInBlank'
 import { Badge, Key, KeyHint, LevelBadge } from '@/components/ui'
 import type { FillInBlankResult } from './FillInBlankExercise'
 import type { Quality, Word } from '@/types'
+import { noAutofill } from '@/utils/noAutofill'
 
 /** Under this, a clean answer counts as instant recall rather than effort. */
 const FAST_MS = 6_000
@@ -218,10 +219,7 @@ export function RecallExercise({
             readOnly={!!submitted}
             placeholder="Type the word…"
             className={`input text-lg ${submitted ? 'opacity-70' : ''}`}
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="none"
-            spellCheck={false}
+            {...noAutofill}
           />
           {!submitted ? (
             <button

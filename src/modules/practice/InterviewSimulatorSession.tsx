@@ -31,6 +31,7 @@ import { recordReview } from '@/utils/dailyLog'
 import { useAppStore } from '@/store/useAppStore'
 import { isSTTSupported, startRecognition, type STTHandle } from '@/audio/stt'
 import { KeyHint } from '@/components/ui'
+import { noAutofill, noAutofillProse } from '@/utils/noAutofill'
 
 const XP_PER_ANSWER = 4
 const XP_COMPLETION_BONUS = 15 // on wrap-up
@@ -413,17 +414,17 @@ export function InterviewSimulatorSession() {
           Mistral API key missing.
         </h1>
         <p className="mb-6 text-text-muted">
-          Add{' '}
-          <code className="rounded bg-bg-subtle px-1.5">
-            VITE_MISTRAL_API_KEY
-          </code>{' '}
-          to{' '}
-          <code className="rounded bg-bg-subtle px-1.5">.env.local</code> to run
-          the interview simulator.
+          Paste your own key in Settings → AI connection to run the interview
+          simulator.
         </p>
-        <Link to="/practice" className="btn-ghost inline-flex">
-          ← Back to practice menu
-        </Link>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link to="/settings" className="btn-primary inline-flex">
+            Open settings
+          </Link>
+          <Link to="/practice" className="btn-ghost inline-flex">
+            ← Back to practice menu
+          </Link>
+        </div>
       </div>
     )
   }
@@ -541,6 +542,7 @@ export function InterviewSimulatorSession() {
             rows={2}
             disabled={state.sending}
             className="input w-full resize-none text-base"
+            {...noAutofill}
           />
           {state.permissionDenied ? (
             <p className="mt-1 text-xs text-warning">
@@ -654,6 +656,7 @@ function SetupPanel({
           placeholder="e.g. Senior Product Designer, Frontend Engineer, Data Analyst…"
           className="input w-full text-base"
           autoFocus
+          {...noAutofillProse}
         />
         <div className="flex flex-wrap gap-2">
           {ROLE_PRESETS.map((preset) => (
@@ -687,6 +690,7 @@ function SetupPanel({
           onChange={(e) => setCompany(e.target.value)}
           placeholder="e.g. Airbnb, Figma, early-stage fintech, design agency…"
           className="input w-full text-base"
+          {...noAutofillProse}
         />
       </section>
 

@@ -36,6 +36,7 @@ import { Button, buttonClass, EmptyState, PageLoader, Sheet } from '@/components
 import { WordForm } from '@/components/WordForm'
 import { useAppStore } from '@/store/useAppStore'
 import type { Level, SRSCard, Word } from '@/types'
+import { noAutofill } from '@/utils/noAutofill'
 
 const LEVELS: Level[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
 
@@ -483,8 +484,10 @@ export function DeckPage() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          type="search"
           placeholder="Search words, translation, definition, example…"
           className="input flex-1 min-w-[220px]"
+          {...noAutofill}
         />
         <div className="flex gap-1 rounded-xl border border-border bg-bg p-1">
           {(

@@ -38,6 +38,7 @@ import {
 } from './questions'
 import type { Level } from '@/types'
 import { Key, KeyHint } from '@/components/ui'
+import { noAutofill } from '@/utils/noAutofill'
 
 /** A learner's answer: option index for choice-style, typed string for fill-blank. */
 type Answer = number | string | null
@@ -511,8 +512,7 @@ function FillBlankCard({
             }}
             disabled={revealed}
             placeholder="…"
-            autoComplete="off"
-            spellCheck={false}
+            {...noAutofill}
             className={
               'min-w-[110px] rounded-md border px-2 py-1 text-base font-display tracking-tight transition-colors ' +
               (revealed

@@ -4,6 +4,12 @@
  * It no longer carries a hamburger: on mobile the BottomNav owns navigation,
  * which frees this row to be purely informational. It stays sticky so the
  * XP bar is visible while you scroll a long deck.
+ *
+ * Informational, though, is exactly why it is not unconditional. On a phone
+ * the Layout asks for `showStats={false}` everywhere but the dashboard: your
+ * level does not change while you answer a drill, and the row costs about a
+ * tenth of the viewport to say so. The staging warning is never suppressed —
+ * that one is a safety rail, not a stat.
  */
 
 import { motion } from 'framer-motion'
@@ -11,7 +17,12 @@ import { useAppStore } from '@/store/useAppStore'
 import { levelFromXp } from '@/utils/levels'
 import { IS_DEMO } from '@/config'
 
-export function TopBar() {
+export function TopBar({
+  /** False on a phone outside the dashboard — see the note above. */
+  showStats = true,
+}: {
+  showStats?: boolean
+}) {
   const stats = useAppStore((s) => s.stats)
   const combo = useAppStore((s) => s.combo)
 
@@ -29,6 +40,7 @@ export function TopBar() {
         </div>
       )}
 
+      {!showStats ? null : (
       <header
         className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b-hair border-border-subtle bg-bg/85 px-4 py-3 backdrop-blur sm:px-6"
         style={{ paddingTop: 'calc(var(--space-3) + var(--safe-top))' }}
@@ -90,6 +102,7 @@ export function TopBar() {
           )}
         </div>
       </header>
+      )}
     </>
   )
 }

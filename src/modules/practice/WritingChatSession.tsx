@@ -21,6 +21,7 @@ import type { ChatMessage } from '@/ai/chat'
 import { recordReview } from '@/utils/dailyLog'
 import { useAppStore } from '@/store/useAppStore'
 import { useCoarsePointer } from '@/utils/usePointer'
+import { noAutofill } from '@/utils/noAutofill'
 
 const XP_PER_MESSAGE = 3
 const XP_CLEAN_BONUS = 2 // +2 when the user message needed no correction
@@ -183,12 +184,17 @@ export function WritingChatSession() {
           Mistral API key missing.
         </h1>
         <p className="mb-6 text-text-muted">
-          Add <code className="rounded bg-bg-subtle px-1.5">VITE_MISTRAL_API_KEY</code> to
-          <code className="rounded bg-bg-subtle px-1.5"> .env.local</code> to use the writing chat.
+          Paste your own key in Settings → AI connection to use the writing
+          chat.
         </p>
-        <Link to="/practice" className="btn-ghost inline-flex">
-          ← Back to practice menu
-        </Link>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link to="/settings" className="btn-primary inline-flex">
+            Open settings
+          </Link>
+          <Link to="/practice" className="btn-ghost inline-flex">
+            ← Back to practice menu
+          </Link>
+        </div>
       </div>
     )
   }
@@ -280,6 +286,7 @@ export function WritingChatSession() {
           rows={2}
           className="input resize-none text-base"
           disabled={state.sending}
+          {...noAutofill}
         />
         <button
           onClick={send}

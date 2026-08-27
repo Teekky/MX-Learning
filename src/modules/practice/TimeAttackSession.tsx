@@ -21,6 +21,7 @@ import { compareAnswer } from '@/utils/strings'
 import { playBuzz, playDing, vibrate } from '@/audio/sfx'
 import { allowedLevelsFor } from '@/utils/levelFilter'
 import { SessionComplete } from './SessionComplete'
+import { noAutofill } from '@/utils/noAutofill'
 
 const DURATION_SECONDS = 60
 const XP_PER_CORRECT = 5
@@ -288,9 +289,7 @@ export function TimeAttackSession() {
             }}
             placeholder="Type the English word…"
             className="input flex-1 text-lg"
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
+            {...noAutofill}
           />
           <button onClick={skip} className="btn-ghost" title="Skip (Tab)">
             Skip

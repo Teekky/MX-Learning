@@ -30,6 +30,7 @@ import { EmptyDeckNotice } from './EmptyDeckNotice'
 import type { Review } from '@/types'
 import { Key, KeyHint } from '@/components/ui'
 import { SessionComplete } from './SessionComplete'
+import { noAutofill } from '@/utils/noAutofill'
 
 const MAX_CARDS_PER_SESSION = 8
 
@@ -282,7 +283,7 @@ export function WordsInContextSession() {
     return (
       <Notice
         title="Mistral API key missing."
-        body="Add VITE_MISTRAL_API_KEY to .env.local to use this AI-powered mode."
+        body="Paste your own key in Settings → AI connection to use this AI-powered mode."
       />
     )
   }
@@ -380,9 +381,7 @@ export function WordsInContextSession() {
                 readOnly={!!submitted}
                 placeholder="Type the missing word…"
                 className={`input text-lg ${submitted ? 'opacity-70' : ''}`}
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck={false}
+                {...noAutofill}
               />
               {!submitted ? (
                 <button

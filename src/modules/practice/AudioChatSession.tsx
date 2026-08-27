@@ -22,6 +22,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { isSTTSupported, startRecognition, type STTHandle } from '@/audio/stt'
 import { speak, stopSpeaking } from '@/audio/tts'
 import { KeyHint } from '@/components/ui'
+import { noAutofill } from '@/utils/noAutofill'
 
 const XP_PER_MESSAGE = 4
 const XP_CLEAN_BONUS = 3
@@ -301,7 +302,7 @@ export function AudioChatSession() {
     return (
       <Notice
         title="Mistral API key missing."
-        body="Add VITE_MISTRAL_API_KEY to .env.local to use the speaking chat."
+        body="Paste your own key in Settings → AI connection to use the speaking chat."
       />
     )
   }
@@ -427,6 +428,7 @@ export function AudioChatSession() {
             rows={2}
             disabled={state.sending}
             className="input w-full resize-none text-base"
+            {...noAutofill}
           />
           {state.permissionDenied ? (
             <p className="mt-1 text-xs text-warning">
