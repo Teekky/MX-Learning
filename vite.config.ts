@@ -27,8 +27,18 @@ const CSP = [
   "media-src 'self' blob:",
   "worker-src 'self'",
   "manifest-src 'self'",
-  // The only outbound host: the Mistral API. Nothing else can be reached.
-  "connect-src 'self' https://api.mistral.ai",
+  /*
+   * The complete list of hosts this app may reach. Nothing else can be,
+   * which is what makes a stolen API key hard to send anywhere.
+   *
+   *   api.mistral.ai        every LLM call
+   *   picsum.photos         the random photo behind "Describe an image"
+   *   fastly.picsum.photos  picsum answers 302 and hands the image to its
+   *                         CDN. CSP re-checks the redirect target, so
+   *                         allowing only the first host blocks the fetch
+   *                         one hop later — with a bare "Failed to fetch".
+   */
+  "connect-src 'self' https://api.mistral.ai https://picsum.photos https://fastly.picsum.photos",
 ].join('; ')
 
 function cspPlugin(): Plugin {
