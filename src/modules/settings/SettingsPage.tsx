@@ -310,7 +310,10 @@ function ApiKeyPanel() {
     getUserApiKey() ? null : '',
   )
   const [busy, setBusy] = useState(false)
-  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null)
+  const [result, setResult] = useState<{
+    tone: 'ok' | 'warn' | 'error'
+    msg: string
+  } | null>(null)
 
   async function save() {
     const key = (draft ?? '').trim()
@@ -321,24 +324,34 @@ function ApiKeyPanel() {
     const check = await testMistralKey()
     setBusy(false)
 
-    if (check.ok) {
-      setSaved(key)
-      setDraft(null)
+    /* A key Mistral *refuses* is worse than no key — every AI mode would fail
+       one request at a time. That one rolls back. A key we could not reach
+       Mistral to check is kept: the network says nothing about the key, and
+       refusing to save on a dead Wi-Fi would be its own bug. */
+    if (!check.ok && check.kind === 'rejected') {
+      setUserApiKey(saved)
       setSource(apiKeySource())
-      setResult({ ok: true, msg: 'Key saved and verified.' })
+      setResult({ tone: 'error', msg: check.error })
+      return
+    }
+
+    setSaved(key)
+    setDraft(null)
+    setSource(apiKeySource())
+
+    if (check.ok) {
+      setResult({ tone: 'ok', msg: 'Key saved and verified.' })
       pushToast({
         kind: 'info',
         title: 'Mistral connected',
         body: 'AI modes are unlocked.',
       })
-      return
+    } else {
+      setResult({
+        tone: 'warn',
+        msg: `Key saved, but not verified. ${check.error}`,
+      })
     }
-
-    /* A key Mistral refuses is worse than no key — every AI mode would fail
-       one request at a time. Roll back to whatever was there before. */
-    setUserApiKey(saved)
-    setSource(apiKeySource())
-    setResult({ ok: false, msg: check.error })
   }
 
   function remove() {
@@ -440,7 +453,13 @@ function ApiKeyPanel() {
       {result && (
         <p
           role="status"
-          className={`text-sm ${result.ok ? 'text-success' : 'text-danger'}`}
+          className={`text-sm ${
+            result.tone === 'ok'
+              ? 'text-success'
+              : result.tone === 'warn'
+                ? 'text-warning'
+                : 'text-danger'
+          }`}
         >
           {result.msg}
         </p>

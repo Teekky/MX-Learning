@@ -120,33 +120,63 @@ export function getModelName(): string {
 }
 
 /**
- * One cheap round trip, so Settings can say "it works" instead of "it is
- * saved". Resolves with an error message on failure rather than throwing —
- * the caller is a form, not a session.
+ * Result of probing a key. The two failure modes are not the same thing and
+ * must not be treated the same: a key Mistral *refuses* is worse than none,
+ * because every AI mode would then fail one request at a time. A key we could
+ * not *reach* Mistral to check says nothing about the key — the phone was on
+ * a dead Wi-Fi, in a tunnel, or behind a filtering DNS — and throwing it away
+ * would leave you unable to save a perfectly good key from a train.
  */
-export async function testMistralKey(): Promise<
-  { ok: true } | { ok: false; error: string }
-> {
+export type KeyCheck =
+  | { ok: true }
+  | { ok: false; kind: 'rejected' | 'unreachable'; error: string }
+
+/* The SDK defaults to 30s per request, which is a long time to stare at a
+   spinner on a phone to learn that the network is down. */
+const PROBE_TIMEOUT_MS = 12_000
+
+/**
+ * One cheap round trip, so Settings can say "it works" instead of "it is
+ * saved". Resolves with a reason on failure rather than throwing — the caller
+ * is a form, not a session.
+ *
+ * `GET /v1/models` rather than a completion: it is a small, fast call that
+ * checks nothing but the key. A completion also has to find the model, which
+ * makes "your key is fine but your tier cannot reach mistral-large" look
+ * exactly like "your key is bad".
+ */
+export async function testMistralKey(): Promise<KeyCheck> {
   try {
-    const res = await getMistralClient().chat.complete({
-      model: getModelName(),
-      messages: [{ role: 'user', content: 'Reply with the single word: ok' }],
-      maxTokens: 5,
-      temperature: 0,
+    await getMistralClient().models.list(undefined, {
+      timeoutMs: PROBE_TIMEOUT_MS,
     })
-    /* The content may be a string or an array of chunks; either shape means
-       the key, the model name and the network all worked. */
-    if (!res.choices?.[0]?.message) {
-      return { ok: false, error: 'Empty response from Mistral.' }
-    }
     return { ok: true }
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
-    /* 401 is by far the likeliest failure, and the raw SDK message for it is
-       not something you want to read on a phone. */
-    if (/401|unauthorized|invalid.*api.*key/i.test(msg)) {
-      return { ok: false, error: 'Mistral rejected this key (401).' }
+    /* Every SDK error raised from an HTTP *response* carries a statusCode —
+       so its presence is the proof that we reached Mistral at all. Without
+       one, the request never completed: timeout, DNS, offline. */
+    const status = (e as { statusCode?: unknown } | null)?.statusCode
+    if (typeof status === 'number') {
+      if (status === 401 || status === 403) {
+        return {
+          ok: false,
+          kind: 'rejected',
+          error: `Mistral rejected this key (${status}).`,
+        }
+      }
+      return {
+        ok: false,
+        kind: 'unreachable',
+        error: `Mistral answered with HTTP ${status}.`,
+      }
     }
-    return { ok: false, error: msg }
+    const msg = e instanceof Error ? e.message : String(e)
+    return {
+      ok: false,
+      kind: 'unreachable',
+      error: /timed out/i.test(msg)
+        ? 'Could not reach Mistral in time — check the connection and try again.'
+        : `Could not reach Mistral: ${msg}`,
+    }
   }
 }
