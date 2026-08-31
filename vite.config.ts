@@ -136,6 +136,24 @@ export default defineConfig(({ mode }) => {
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        /*
+         * Keep the big, rarely-changing vendor libraries in their own
+         * long-lived chunks so an app-code deploy doesn't force a re-download
+         * of React + the animation engine. The Mistral SDK is not listed:
+         * it is dynamically imported (see ai/mistralClient.ts) and Rollup
+         * already gives it its own chunk that only AI sessions pull in.
+         */
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          motion: ['framer-motion'],
+          dexie: ['dexie', 'dexie-react-hooks'],
+        },
+      },
+    },
+  },
   server: {
     // Different ports per environment so you can tell at a glance which
     // database a tab is talking to — and so both can run side by side.

@@ -7,12 +7,8 @@ import { Loader2, Moon, Play, Sun } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/store/useAppStore'
 import { listEnglishVoices, speak } from '@/audio/tts'
-import {
-  apiKeySource,
-  getUserApiKey,
-  setUserApiKey,
-  testMistralKey,
-} from '@/ai/mistral'
+import { apiKeySource, getUserApiKey, setUserApiKey } from '@/ai/mistral'
+import { testMistralKey } from '@/ai/mistralClient'
 import { db } from '@/db/database'
 import { PageLoader } from '@/components/ui'
 import { BackupPanel } from '@/components/BackupPanel'
