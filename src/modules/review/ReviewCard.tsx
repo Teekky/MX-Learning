@@ -178,6 +178,9 @@ export function ReviewCard({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
             className="mt-8 w-full"
+            /* Announce the answer when it unfolds — a screen-reader user
+               who pressed "Reveal" would otherwise have to hunt for it. */
+            aria-live="polite"
           >
             {/* The rule draws itself across as the verso lands. A div, not
                 an <hr>: <hr> carries a UA border on all four sides that we

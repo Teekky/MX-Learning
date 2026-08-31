@@ -10,6 +10,7 @@
  */
 
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { MotionConfig } from 'framer-motion'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { PageLoader } from '@/components/ui'
@@ -81,19 +82,20 @@ function App() {
    * The browser chrome colour follows, so the Android status bar matches
    * the app instead of flashing the wrong background on launch.
    */
+  const theme = settings?.theme
   useEffect(() => {
-    if (!settings) return
-    const isDark = settings.theme === 'dark'
+    if (!theme) return
+    const isDark = theme === 'dark'
     document.documentElement.classList.toggle('dark', isDark)
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute('content', isDark ? '#131110' : '#F7F3EE')
     try {
-      localStorage.setItem('mx:theme', settings.theme)
+      localStorage.setItem('mx:theme', theme)
     } catch {
       /* localStorage may be blocked — accept the small FOUC cost. */
     }
-  }, [settings?.theme])
+  }, [theme])
 
   if (bootError) {
     return (
@@ -136,6 +138,12 @@ function App() {
      root, so the router has to strip that prefix before matching. BASE_URL is
      whatever Vite's `base` was at build time — "/" everywhere else. */
   return (
+    /* `reducedMotion="user"` makes every framer-motion component honour the
+       OS "reduce motion" setting — transform and layout animations are
+       dropped, opacity fades stay. Without it the hard-coded `duration:`
+       values on the review card and page transitions ignore the preference
+       entirely. */
+    <MotionConfig reducedMotion="user">
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       {/* Outside <Routes> on purpose: this is what registers the service
           worker, and it has to run on every route — including /onboarding,
@@ -183,6 +191,7 @@ function App() {
       </Suspense>
       </ErrorBoundary>
     </BrowserRouter>
+    </MotionConfig>
   )
 }
 
