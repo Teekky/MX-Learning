@@ -7,9 +7,13 @@
  * runs through the drills, and sees a score recap.
  *
  * Bilingual content: English is always shown; when a French translation
- * is provided (rule, blurb, prompt, explanation, example note), it
- * appears in accent colour right under the English version. No toggle —
- * always parallel.
+ * is provided it appears in accent colour right under the English version.
+ *
+ * In the lesson the French starts hidden, behind a toggle. Reading the rule
+ * in English is the exercise — a translation sitting under every paragraph
+ * is read first and makes the English decorative. The escape hatch stays one
+ * tap away for the paragraph you genuinely cannot parse. The drills keep
+ * their French inline: there the prompt is the task, not the reading.
  */
 
 import { motion } from 'framer-motion'
@@ -22,6 +26,7 @@ import { allowedLevelsFor } from '@/utils/levelFilter'
 import { shuffled } from '@/utils/shuffle'
 import { playBuzz, playDing, vibrate } from '@/audio/sfx'
 import type { Level } from '@/types'
+import { Languages } from 'lucide-react'
 import { Key, KeyHint } from '@/components/ui'
 import { noAutofill } from '@/utils/noAutofill'
 
@@ -85,6 +90,14 @@ export function TopicLessonSession({ config }: { config: LessonConfig }) {
   const [bestByTopic, setBestByTopic] = useState<Record<string, number>>(() =>
     readBestScores(config.topics, lsBestPrefix),
   )
+
+  /* French help in the lesson, off to begin with.
+     Held here rather than inside ReadPanel so it survives a hop back to the
+     topic list: someone who needed the translation on one topic almost
+     certainly wants it on the next. It is deliberately *not* persisted —
+     every fresh visit to Grammar or Tenses starts in English again, which is
+     the whole point of the default. */
+  const [showFrench, setShowFrench] = useState(false)
 
   const stats = useAppStore((s) => s.stats)
   const settings = useAppStore((s) => s.settings)
@@ -225,6 +238,8 @@ export function TopicLessonSession({ config }: { config: LessonConfig }) {
     return (
       <ReadPanel
         topic={phase.topic}
+        showFrench={showFrench}
+        onToggleFrench={() => setShowFrench((v) => !v)}
         onStart={() => startDrills(phase.topic)}
         onBack={() => setPhase({ kind: 'pick' })}
       />
@@ -443,10 +458,15 @@ function PickPanel({
 
 function ReadPanel({
   topic,
+  showFrench,
+  onToggleFrench,
   onStart,
   onBack,
 }: {
   topic: GrammarTopic
+  /** False by default — the lesson is meant to be read in English. */
+  showFrench: boolean
+  onToggleFrench: () => void
   onStart: () => void
   onBack: () => void
 }) {
@@ -455,6 +475,18 @@ function ReadPanel({
   // If the counts differ, we fall back to whichever side has content.
   const enParas = topic.rule.split(/\n\n+/)
   const frParas = topic.ruleFr ? topic.ruleFr.split(/\n\n+/) : []
+
+  /* Not every topic is translated. Offering a toggle that reveals nothing
+     is worse than offering none, so the button appears only where there is
+     actually French to show. */
+  const hasFrench =
+    Boolean(topic.blurbFr) ||
+    frParas.length > 0 ||
+    topic.examples.some((ex) => ex.fr || ex.noteFr)
+
+  /* Read together: `fr` is the French of a given block, or null when it is
+     absent or currently hidden. */
+  const fr = (text: string | undefined) => (showFrench && text ? text : null)
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -466,16 +498,39 @@ function ReadPanel({
         ← All topics
       </button>
 
-      <header className="space-y-1">
-        <div className="flex items-baseline gap-2">
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            {topic.name}
-          </h1>
-          <LevelBadge level={topic.level} />
+      {/* Column on a phone: sharing the row costs the title about a third of
+          its width, and topic names like "Present simple vs present
+          continuous" then wrap to five lines. */}
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-1">
+          <div className="flex items-baseline gap-2">
+            <h1 className="font-display text-3xl font-semibold tracking-tight">
+              {topic.name}
+            </h1>
+            <LevelBadge level={topic.level} />
+          </div>
+          <p className="text-text-muted">{topic.blurb}</p>
+          {fr(topic.blurbFr) && (
+            <p className="text-accent">{topic.blurbFr}</p>
+          )}
         </div>
-        <p className="text-text-muted">{topic.blurb}</p>
-        {topic.blurbFr && (
-          <p className="text-accent">{topic.blurbFr}</p>
+
+        {hasFrench && (
+          <button
+            type="button"
+            onClick={onToggleFrench}
+            aria-pressed={showFrench}
+            className={`press inline-flex min-h-tap shrink-0 items-center gap-2
+              self-start rounded-lg border-hair px-3 text-sm font-medium
+              transition-colors ${
+                showFrench
+                  ? 'border-accent bg-accent-subtle text-text'
+                  : 'border-border bg-bg-subtle text-text-muted hover:border-text-subtle hover:text-text'
+              }`}
+          >
+            <Languages size={16} aria-hidden />
+            {showFrench ? 'Hide French' : 'Français'}
+          </button>
         )}
       </header>
 
@@ -490,7 +545,7 @@ function ReadPanel({
                 className="text-text"
                 dangerouslySetInnerHTML={{ __html: renderMarkdownLite(para) }}
               />
-              {frParas[i] && (
+              {fr(frParas[i]) && (
                 <p
                   className="text-accent"
                   dangerouslySetInnerHTML={{
@@ -511,11 +566,11 @@ function ReadPanel({
           {topic.examples.map((ex, i) => (
             <div key={i} className="card space-y-1 py-3">
               <p className="text-base text-text">{ex.en}</p>
-              {ex.fr && <p className="text-sm text-accent">{ex.fr}</p>}
+              {fr(ex.fr) && <p className="text-sm text-accent">{ex.fr}</p>}
               {ex.note && (
                 <p className="text-xs italic text-text-subtle">{ex.note}</p>
               )}
-              {ex.noteFr && (
+              {fr(ex.noteFr) && (
                 <p className="text-xs italic text-accent">{ex.noteFr}</p>
               )}
             </div>
