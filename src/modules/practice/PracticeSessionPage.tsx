@@ -9,59 +9,60 @@
  * between "open it and drill for two minutes" and a 1 MB stall.
  */
 
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { PageLoader } from '@/components/ui'
+import { lazyWithReload } from '@/utils/lazyWithReload'
 
 const SESSIONS: Record<string, React.LazyExoticComponent<() => React.ReactNode>> = {
-  'fill-in-blank': lazy(() =>
+  'fill-in-blank': lazyWithReload(() =>
     import('./FillInBlankSession').then((m) => ({ default: m.FillInBlankSession })),
   ),
-  'time-attack': lazy(() =>
+  'time-attack': lazyWithReload(() =>
     import('./TimeAttackSession').then((m) => ({ default: m.TimeAttackSession })),
   ),
-  'random-words': lazy(() =>
+  'random-words': lazyWithReload(() =>
     import('./WordsInContextSession').then((m) => ({
       default: m.WordsInContextSession,
     })),
   ),
-  writing: lazy(() =>
+  writing: lazyWithReload(() =>
     import('./WritingChatSession').then((m) => ({ default: m.WritingChatSession })),
   ),
-  audio: lazy(() =>
+  audio: lazyWithReload(() =>
     import('./AudioChatSession').then((m) => ({ default: m.AudioChatSession })),
   ),
-  image: lazy(() =>
+  image: lazyWithReload(() =>
     import('./ImageDescriptionSession').then((m) => ({
       default: m.ImageDescriptionSession,
     })),
   ),
-  interview: lazy(() =>
+  interview: lazyWithReload(() =>
     import('./InterviewSimulatorSession').then((m) => ({
       default: m.InterviewSimulatorSession,
     })),
   ),
-  import: lazy(() =>
+  import: lazyWithReload(() =>
     import('./ImportTextSession').then((m) => ({ default: m.ImportTextSession })),
   ),
-  listening: lazy(() =>
+  listening: lazyWithReload(() =>
     import('./ListeningSession').then((m) => ({ default: m.ListeningSession })),
   ),
-  pronunciation: lazy(() =>
+  pronunciation: lazyWithReload(() =>
     import('./PronunciationSession').then((m) => ({
       default: m.PronunciationSession,
     })),
   ),
-  grammar: lazy(() =>
+  grammar: lazyWithReload(() =>
     import('./GrammarSession').then((m) => ({ default: m.GrammarSession })),
   ),
-  tenses: lazy(() =>
+  tenses: lazyWithReload(() =>
     import('./TensesSession').then((m) => ({ default: m.TensesSession })),
   ),
-  conjugation: lazy(() =>
+  conjugation: lazyWithReload(() =>
     import('./ConjugationSession').then((m) => ({ default: m.ConjugationSession })),
   ),
-  'weak-words': lazy(() =>
+  'weak-words': lazyWithReload(() =>
     import('./WeakWordsSession').then((m) => ({ default: m.WeakWordsSession })),
   ),
 }

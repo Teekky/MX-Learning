@@ -39,6 +39,42 @@ export class ErrorBoundary extends Component<Props, State> {
     const { error } = this.state
     if (!error) return this.props.children
 
+    /* A failed dynamic import almost always means a new build shipped while
+       this tab was open — the old chunk URLs are gone. lazyWithReload tries
+       to self-heal first; if we still land here, a manual reload is the fix. */
+    const staleChunk =
+      /dynamically imported module|Importing a module script failed|Failed to fetch/i.test(
+        error.message,
+      )
+
+    if (staleChunk) {
+      return (
+        <div
+          className="flex min-h-[100dvh] flex-col items-center justify-center bg-bg px-6 text-center text-text"
+          style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }}
+        >
+          <div className="w-full max-w-sm space-y-4">
+            <div className="text-4xl" aria-hidden>
+              ↻
+            </div>
+            <h1 className="font-display text-2xl font-semibold tracking-tight">
+              A new version is ready
+            </h1>
+            <p className="text-sm text-text-muted">
+              Reload to pick it up — your progress is saved.
+            </p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="btn-primary"
+            >
+              Reload
+            </button>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div
         className="flex min-h-[100dvh] flex-col items-center justify-center bg-bg px-6 text-center text-text"

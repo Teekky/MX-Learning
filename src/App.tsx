@@ -9,12 +9,13 @@
  * owns the whole screen, with no sidebar or top bar competing for attention.
  */
 
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { MotionConfig } from 'framer-motion'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { PageLoader } from '@/components/ui'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { lazyWithReload } from '@/utils/lazyWithReload'
 import { UpdatePrompt } from '@/components/UpdatePrompt'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
 import { PracticePage } from '@/modules/practice/PracticePage'
@@ -30,24 +31,24 @@ import { bootstrapDatabase } from '@/db/database'
  * phone, that difference is the whole "open it and review for five minutes"
  * promise.
  */
-const OnboardingPage = lazy(() =>
+const OnboardingPage = lazyWithReload(() =>
   import('@/modules/onboarding/OnboardingPage').then((m) => ({ default: m.OnboardingPage })),
 )
-const PracticeSessionPage = lazy(() =>
+const PracticeSessionPage = lazyWithReload(() =>
   import('@/modules/practice/PracticeSessionPage').then((m) => ({
     default: m.PracticeSessionPage,
   })),
 )
-const DeckPage = lazy(() =>
+const DeckPage = lazyWithReload(() =>
   import('@/modules/deck/DeckPage').then((m) => ({ default: m.DeckPage })),
 )
-const IdiomsPage = lazy(() =>
+const IdiomsPage = lazyWithReload(() =>
   import('@/modules/idioms/IdiomsPage').then((m) => ({ default: m.IdiomsPage })),
 )
-const ProfilePage = lazy(() =>
+const ProfilePage = lazyWithReload(() =>
   import('@/modules/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 )
-const SettingsPage = lazy(() =>
+const SettingsPage = lazyWithReload(() =>
   import('@/modules/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 )
 import { autoSnapshot } from '@/utils/backup'
