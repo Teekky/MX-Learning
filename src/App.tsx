@@ -9,10 +9,11 @@
  * owns the whole screen, with no sidebar or top bar competing for attention.
  */
 
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { PageLoader } from '@/components/ui'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { UpdatePrompt } from '@/components/UpdatePrompt'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
 import { PracticePage } from '@/modules/practice/PracticePage'
@@ -55,6 +56,7 @@ function App() {
   const ready = useAppStore((s) => s.ready)
   const hydrate = useAppStore((s) => s.hydrate)
   const settings = useAppStore((s) => s.settings)
+  const [bootError, setBootError] = useState<Error | null>(null)
 
   useEffect(() => {
     bootstrapDatabase()
@@ -65,6 +67,11 @@ function App() {
            most one snapshot per six hours, and failures are swallowed —
            a backup must never be able to break the app. */
         void autoSnapshot()
+      })
+      .catch((err: unknown) => {
+        /* IndexedDB blocked (private window, Brave shields, quota) — without
+           this the app hangs on "Booting…" forever with no explanation. */
+        setBootError(err instanceof Error ? err : new Error(String(err)))
       })
   }, [hydrate])
 
@@ -88,6 +95,33 @@ function App() {
     }
   }, [settings?.theme])
 
+  if (bootError) {
+    return (
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-bg px-6 text-center text-text">
+        <div className="w-full max-w-sm space-y-4">
+          <div className="text-4xl" aria-hidden>
+            ⚠
+          </div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">
+            MX Learning can’t reach its local storage
+          </h1>
+          <p className="text-sm text-text-muted">
+            This usually means the browser is blocking IndexedDB — a private
+            window, or a shields/privacy setting. Allow site data for this
+            page, then reload.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="btn-primary"
+          >
+            Reload
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (!ready) {
     return (
       <div className="flex h-[100dvh] w-full items-center justify-center bg-bg">
@@ -109,6 +143,7 @@ function App() {
           Without a registered service worker the app is not installable and
           Chrome silently downgrades "Install" to a home-screen bookmark. */}
       <UpdatePrompt />
+      <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* Onboarding lives outside the Layout shell — no sidebar distractions. */}
@@ -146,6 +181,7 @@ function App() {
         </Route>
       </Routes>
       </Suspense>
+      </ErrorBoundary>
     </BrowserRouter>
   )
 }
