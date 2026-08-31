@@ -77,7 +77,8 @@ export function FillInBlankExercise({ word, card: _card, onDone, index, total }:
 
     // Immediate sensory feedback — fires on validation, not on Next.
     if (settings?.soundEnabled) {
-      isCorrect ? playDing() : playBuzz()
+      if (isCorrect) playDing()
+      else playBuzz()
     }
     if (settings?.vibrationsEnabled) {
       vibrate(isCorrect ? 12 : [8, 40, 8])

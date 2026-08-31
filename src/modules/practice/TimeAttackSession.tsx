@@ -141,7 +141,10 @@ export function TimeAttackSession() {
     const success = isCorrect || isTypo
 
     // Feedback (immediate).
-    if (settings?.soundEnabled) success ? playDing(0.4) : playBuzz(0.3)
+    if (settings?.soundEnabled) {
+      if (success) playDing(0.4)
+      else playBuzz(0.3)
+    }
     if (settings?.vibrationsEnabled) vibrate(success ? 8 : [6, 30, 6])
 
     // Persist + nudge in the background so the UI can advance immediately.

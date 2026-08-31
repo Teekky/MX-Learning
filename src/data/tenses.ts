@@ -1142,13 +1142,13 @@ Quelques verbes changent de sens selon stative/dynamic :
 - ✗ *I would live in Paris.* (wrong — "live" is a state)
 
 Past simple ("I lived in Paris in 2010") works for one specific past period; "used to" emphasises the contrast with now.`,
-    ruleFr: `**used to + verbe à la base** — habitude OU état passé qui n\'existe plus. Marche pour les actions et les états.
+    ruleFr: `**used to + verbe à la base** — habitude OU état passé qui n'existe plus. Marche pour les actions et les états.
 *I used to smoke. (action) / I used to live in Paris. (état)*
 
-**would + verbe à la base** — habitude UNIQUEMENT (pas d\'état). Idéal pour les actions répétées ; vient souvent après "when" ou "as a kid".
+**would + verbe à la base** — habitude UNIQUEMENT (pas d'état). Idéal pour les actions répétées ; vient souvent après "when" ou "as a kid".
 *When I was a kid, I would spend hours drawing.*
 
-**Crucial** : "would" ne marche PAS avec les verbes d\'état (be, have, know, like, live).
+**Crucial** : "would" ne marche PAS avec les verbes d'état (be, have, know, like, live).
 - ✓ *I used to live in Paris.*
 - ✗ *I would live in Paris.* (faux — "live" est un état)
 
@@ -1201,7 +1201,7 @@ Don't confuse with the simple past continuous of one moment: *I was reading at 8
 
 Similaire à "would + base" pour les habitudes passées, mais avec une couche émotionnelle. "I used to" est neutre ; "He was always V-ing" est chargé.
 
-À ne pas confondre avec un prétérit continu d'un moment précis : *I was reading at 8 pm* (pas d\'agacement).`,
+À ne pas confondre avec un prétérit continu d'un moment précis : *I was reading at 8 pm* (pas d'agacement).`,
     examples: [
       { en: 'My old manager was always cancelling our 1:1s.', fr: 'Mon ancien manager annulait sans arrêt nos 1:1.', note: 'Annoying habit → was + always + V-ing.', noteFr: 'Habitude agaçante → was + always + V-ing.' },
       { en: 'When we lived together, my flatmate was constantly leaving dishes in the sink.', fr: 'Quand on vivait ensemble, mon coloc laissait sans cesse la vaisselle dans l\'évier.', note: '"Constantly + V-ing" carries the irritation.', noteFr: '"Constantly + V-ing" porte l\'agacement.' },
@@ -1250,7 +1250,7 @@ Usage 1 — action en cours à un moment futur : *This time tomorrow, I'll be fl
 
 Usage 2 — plan déjà arrangé (moins personnel que le présent continu) : *I'll be meeting the client on Tuesday.*
 
-Usage 3 — question polie sur des plans (évite d\'avoir l\'air pressant) : *Will you be coming to the offsite?* (plus doux que "Are you coming?")
+Usage 3 — question polie sur des plans (évite d'avoir l'air pressant) : *Will you be coming to the offsite?* (plus doux que "Are you coming?")
 
 Comparaison :
 - *I'll work on it.* (décision, will + base)

@@ -284,7 +284,10 @@ export function ListeningSession() {
       xpMultiplier,
     }
 
-    if (settings?.soundEnabled) isCorrect ? playDing() : playBuzz()
+    if (settings?.soundEnabled) {
+      if (isCorrect) playDing()
+      else playBuzz()
+    }
     if (settings?.vibrationsEnabled) vibrate(isCorrect ? 12 : [8, 40, 8])
 
     setState({ ...s, submitted })
