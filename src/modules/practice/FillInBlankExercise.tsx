@@ -17,6 +17,8 @@ import { compareAnswer } from '@/utils/strings'
 import { useAppStore } from '@/store/useAppStore'
 import { maskLemma, pickExample, qualityFromAnswer } from './fillInBlank'
 import type { Quality, SRSCard, Word } from '@/types'
+import { Key, KeyHint } from '@/components/ui'
+import { noAutofill } from '@/utils/noAutofill'
 
 export interface FillInBlankResult {
   quality: Quality
@@ -124,7 +126,7 @@ export function FillInBlankExercise({ word, card: _card, onDone, index, total }:
       {/* Sentence card */}
       <div className="card space-y-6">
         <div className="flex items-start justify-between gap-4">
-          <p className="font-display text-2xl leading-relaxed text-text">
+          <p className="text-2xl leading-relaxed text-text">
             {masked}
           </p>
           <button
@@ -137,20 +139,17 @@ export function FillInBlankExercise({ word, card: _card, onDone, index, total }:
           </button>
         </div>
 
-        {/* Input */}
-        <div className="flex gap-3">
+        {/* Input — side by side on a wide screen, stacked on a phone where
+            sharing a row leaves the field about a dozen characters wide. */}
+        <div className="answer-row">
           <input
             ref={inputRef}
             value={value}
             onChange={(e) => setValue(e.target.value)}
             readOnly={!!submitted}
             placeholder="Type the missing word…"
-            className={`input flex-1 text-lg ${
-              submitted ? 'opacity-70' : ''
-            }`}
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
+            className={`input text-lg ${submitted ? 'opacity-70' : ''}`}
+            {...noAutofill}
           />
           {!submitted ? (
             <button
@@ -184,10 +183,9 @@ export function FillInBlankExercise({ word, card: _card, onDone, index, total }:
         </AnimatePresence>
       </div>
 
-      <p className="mt-4 text-center text-xs text-text-subtle">
-        Press <kbd className="rounded bg-bg-subtle px-1.5 py-0.5">Enter</kbd> to
-        {submitted ? ' continue' : ' submit'}.
-      </p>
+      <KeyHint>
+        Press <Key>Enter</Key> to{submitted ? ' continue' : ' submit'}.
+      </KeyHint>
     </motion.div>
   )
 }

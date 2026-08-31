@@ -27,6 +27,8 @@ import { allowedLevelsFor } from '@/utils/levelFilter'
 import { shuffled } from '@/utils/shuffle'
 import { playBuzz, playDing, vibrate } from '@/audio/sfx'
 import type { Level } from '@/types'
+import { Key, KeyHint } from '@/components/ui'
+import { noAutofill } from '@/utils/noAutofill'
 
 const LS_BEST_PREFIX = 'mx:conjugation-best:'
 
@@ -359,8 +361,7 @@ function PickPanel({
           onChange={(e) => setSearch(e.target.value)}
           placeholder={`Search ${IRREGULAR_VERBS.length} verbs by base, past, French meaning, or level…`}
           className="input w-full"
-          autoComplete="off"
-          spellCheck={false}
+          {...noAutofill}
         />
       </header>
 
@@ -514,7 +515,7 @@ function ExampleRow({ example }: { example: ExampleForForm }) {
       <div className="text-[10px] uppercase tracking-wider text-text-subtle">
         {FORM_LABELS[example.form].en}
       </div>
-      <p className="font-display text-base text-text">{example.sentence}</p>
+      <p className="text-base text-text">{example.sentence}</p>
       {example.sentenceFr && (
         <p className="text-sm text-accent">{example.sentenceFr}</p>
       )}
@@ -580,8 +581,7 @@ function DrillCard({
             }}
             disabled={revealed}
             placeholder="…"
-            autoComplete="off"
-            spellCheck={false}
+            {...noAutofill}
             className={
               'min-w-[110px] rounded-md border px-2 py-1 text-base font-display tracking-tight transition-colors ' +
               (revealed
@@ -596,18 +596,18 @@ function DrillCard({
         {after}
       </p>
       {drill.promptFr && (
-        <p className="font-display text-base text-accent">{drill.promptFr}</p>
+        <p className="text-base text-accent">{drill.promptFr}</p>
       )}
       {!revealed && (
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-text-subtle">
-            Press Enter or click Submit.
-          </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <KeyHint className="mt-0 text-left">
+            Press <Key>Enter</Key> or click Submit.
+          </KeyHint>
           <button
             type="button"
             onClick={commit}
             disabled={draft.trim().length === 0}
-            className="btn-ghost text-sm disabled:opacity-40"
+            className="btn-ghost w-full disabled:opacity-40 sm:w-auto"
           >
             Submit
           </button>
