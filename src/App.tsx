@@ -4,50 +4,146 @@
  * On first launch we surface the CEFR onboarding test. Once the user either
  * completes or skips it, `settings.onboardingComplete` flips to true and
  * subsequent launches skip the gate entirely.
+ *
+ * `/review` is mounted *outside* the Layout on purpose: the review session
+ * owns the whole screen, with no sidebar or top bar competing for attention.
  */
 
-import { useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { MotionConfig } from 'framer-motion'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
-import { PageLoader } from '@/components/PageLoader'
+import { PageLoader } from '@/components/ui'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { lazyWithReload } from '@/utils/lazyWithReload'
+import { UpdatePrompt } from '@/components/UpdatePrompt'
 import { DashboardPage } from '@/modules/dashboard/DashboardPage'
-import { OnboardingPage } from '@/modules/onboarding/OnboardingPage'
 import { PracticePage } from '@/modules/practice/PracticePage'
-import { PracticeSessionPage } from '@/modules/practice/PracticeSessionPage'
-import { DeckPage } from '@/modules/deck/DeckPage'
-import { ProfilePage } from '@/modules/profile/ProfilePage'
-import { SettingsPage } from '@/modules/settings/SettingsPage'
+import { ReviewPage } from '@/modules/review/ReviewPage'
 import { bootstrapDatabase } from '@/db/database'
+
+/**
+ * Everything on the daily path — dashboard, practice menu, review — is
+ * bundled eagerly. Everything else is split out, because the heavy content
+ * files live behind these routes: the practice sessions alone pull in the
+ * seed vocabulary, the grammar corpus, the tense drills and the irregular
+ * verb tables, which together are most of the JavaScript in this app. On a
+ * phone, that difference is the whole "open it and review for five minutes"
+ * promise.
+ */
+const OnboardingPage = lazyWithReload(() =>
+  import('@/modules/onboarding/OnboardingPage').then((m) => ({ default: m.OnboardingPage })),
+)
+const LevelCheckPage = lazyWithReload(() =>
+  import('@/modules/onboarding/LevelCheckPage').then((m) => ({ default: m.LevelCheckPage })),
+)
+const PracticeSessionPage = lazyWithReload(() =>
+  import('@/modules/practice/PracticeSessionPage').then((m) => ({
+    default: m.PracticeSessionPage,
+  })),
+)
+const DeckPage = lazyWithReload(() =>
+  import('@/modules/deck/DeckPage').then((m) => ({ default: m.DeckPage })),
+)
+const IdiomsPage = lazyWithReload(() =>
+  import('@/modules/idioms/IdiomsPage').then((m) => ({ default: m.IdiomsPage })),
+)
+const ProfilePage = lazyWithReload(() =>
+  import('@/modules/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
+)
+const SettingsPage = lazyWithReload(() =>
+  import('@/modules/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
+)
+const AussiePage = lazyWithReload(() =>
+  import('@/modules/aussie/AussiePage').then((m) => ({ default: m.AussiePage })),
+)
+const AussieDomainHub = lazyWithReload(() =>
+  import('@/modules/aussie/AussieDomainHub').then((m) => ({ default: m.AussieDomainHub })),
+)
+const AussieLearnSession = lazyWithReload(() =>
+  import('@/modules/aussie/AussieLearnSession').then((m) => ({
+    default: m.AussieLearnSession,
+  })),
+)
+const AussiePartQuizSession = lazyWithReload(() =>
+  import('@/modules/aussie/AussiePartQuizSession').then((m) => ({
+    default: m.AussiePartQuizSession,
+  })),
+)
+const AussieContextSession = lazyWithReload(() =>
+  import('@/modules/aussie/AussieContextSession').then((m) => ({
+    default: m.AussieContextSession,
+  })),
+)
 import { useAppStore } from '@/store/useAppStore'
 
 function App() {
   const ready = useAppStore((s) => s.ready)
   const hydrate = useAppStore((s) => s.hydrate)
   const settings = useAppStore((s) => s.settings)
+  const [bootError, setBootError] = useState<Error | null>(null)
 
   useEffect(() => {
-    bootstrapDatabase().then(hydrate)
+    bootstrapDatabase()
+      .then(hydrate)
+      .catch((err: unknown) => {
+        /* IndexedDB blocked (private window, Brave shields, quota) — without
+           this the app hangs on "Booting…" forever with no explanation. */
+        setBootError(err instanceof Error ? err : new Error(String(err)))
+      })
   }, [hydrate])
 
   /**
    * Sync the active theme to <html class="dark"|""> and to a localStorage
    * mirror so the next page load can apply it synchronously (no FOUC).
+   * The browser chrome colour follows, so the Android status bar matches
+   * the app instead of flashing the wrong background on launch.
    */
+  const theme = settings?.theme
   useEffect(() => {
-    if (!settings) return
-    const isDark = settings.theme === 'dark'
+    if (!theme) return
+    const isDark = theme === 'dark'
     document.documentElement.classList.toggle('dark', isDark)
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', isDark ? '#131110' : '#F7F3EE')
     try {
-      localStorage.setItem('mx:theme', settings.theme)
+      localStorage.setItem('mx:theme', theme)
     } catch {
       /* localStorage may be blocked — accept the small FOUC cost. */
     }
-  }, [settings?.theme])
+  }, [theme])
 
+  if (bootError) {
+    return (
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-bg px-6 text-center text-text">
+        <div className="w-full max-w-sm space-y-4">
+          <div className="text-4xl" aria-hidden>
+            ⚠
+          </div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">
+            MX Learning can’t reach its local storage
+          </h1>
+          <p className="text-sm text-text-muted">
+            This usually means the browser is blocking IndexedDB — a private
+            window, or a shields/privacy setting. Allow site data for this
+            page, then reload.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="btn-primary"
+          >
+            Reload
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (!ready) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-bg">
+      <div className="flex h-[100dvh] w-full items-center justify-center bg-bg">
         <PageLoader label="Booting MX Learning…" />
       </div>
     )
@@ -55,14 +151,49 @@ function App() {
 
   const onboardingDone = settings?.onboardingComplete === true
 
+  /* GitHub Pages serves a project site from `/<repo>/`, not from the origin
+     root, so the router has to strip that prefix before matching. BASE_URL is
+     whatever Vite's `base` was at build time — "/" everywhere else. */
   return (
-    <BrowserRouter>
+    /* `reducedMotion="user"` makes every framer-motion component honour the
+       OS "reduce motion" setting — transform and layout animations are
+       dropped, opacity fades stay. Without it the hard-coded `duration:`
+       values on the review card and page transitions ignore the preference
+       entirely. */
+    <MotionConfig reducedMotion="user">
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      {/* Outside <Routes> on purpose: this is what registers the service
+          worker, and it has to run on every route — including /onboarding,
+          where a first-run visitor lands before the app shell ever mounts.
+          Without a registered service worker the app is not installable and
+          Chrome silently downgrades "Install" to a home-screen bookmark. */}
+      <UpdatePrompt />
+      <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* Onboarding lives outside the Layout shell — no sidebar distractions. */}
         <Route
           path="/onboarding"
           element={
             onboardingDone ? <Navigate to="/" replace /> : <OnboardingPage />
+          }
+        />
+        {/* Neither does the review session: it is the app, for five minutes. */}
+        <Route
+          path="/review"
+          element={
+            onboardingDone ? <ReviewPage /> : <Navigate to="/onboarding" replace />
+          }
+        />
+        {/* Retake of the placement test — same full-screen treatment as onboarding. */}
+        <Route
+          path="/level-check"
+          element={
+            onboardingDone ? (
+              <LevelCheckPage />
+            ) : (
+              <Navigate to="/onboarding" replace />
+            )
           }
         />
         <Route element={<Layout />}>
@@ -79,12 +210,27 @@ function App() {
           <Route path="practice" element={<PracticePage />} />
           <Route path="practice/:mode" element={<PracticeSessionPage />} />
           <Route path="deck" element={<DeckPage />} />
+          <Route path="idioms" element={<IdiomsPage />} />
+          <Route path="aussie" element={<AussiePage />} />
+          <Route path="aussie/:domainId" element={<AussieDomainHub />} />
+          <Route path="aussie/:domainId/learn" element={<AussieLearnSession />} />
+          <Route
+            path="aussie/:domainId/quiz/:partIndex"
+            element={<AussiePartQuizSession />}
+          />
+          <Route
+            path="aussie/:domainId/context/:partIndex"
+            element={<AussieContextSession />}
+          />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+      </Suspense>
+      </ErrorBoundary>
     </BrowserRouter>
+    </MotionConfig>
   )
 }
 

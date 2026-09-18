@@ -8,7 +8,21 @@
  * Both include a single retry on transient errors.
  */
 
-import { getMistralClient, getModelName } from './mistral'
+import { getModelName } from './mistral'
+import { getMistralClient } from './mistralClient'
+
+/**
+ * A completion needs the network. When the browser already knows it is
+ * offline, fail fast with a message that names the real problem instead of
+ * letting the SDK time out on a doomed fetch.
+ */
+export function assertOnline(): void {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    throw new Error(
+      "You're offline. AI practice modes need a connection — reviews and drills still work.",
+    )
+  }
+}
 
 export type Role = 'system' | 'user' | 'assistant'
 
@@ -28,7 +42,8 @@ export async function chat(
   messages: ChatMessage[],
   opts: ChatOptions = {},
 ): Promise<string> {
-  const client = getMistralClient()
+  assertOnline()
+  const client = await getMistralClient()
   const run = () =>
     client.chat.complete({
       model: getModelName(),
@@ -55,7 +70,8 @@ export async function chatJSON<T = unknown>(
   messages: ChatMessage[],
   opts: ChatOptions = {},
 ): Promise<T> {
-  const client = getMistralClient()
+  assertOnline()
+  const client = await getMistralClient()
   const run = () =>
     client.chat.complete({
       model: getModelName(),
@@ -129,8 +145,11 @@ function is429(err: unknown): boolean {
 
 function isTransient(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false
-  const anyErr = err as { status?: number; message?: string }
-  if (anyErr.status && [408, 500, 502, 503, 504].includes(anyErr.status)) {
+  // The Mistral SDK reports HTTP status on `statusCode`; some lower-level
+  // errors use `status`. Check both or 5xx retries silently never fire.
+  const anyErr = err as { status?: number; statusCode?: number; message?: string }
+  const code = anyErr.statusCode ?? anyErr.status
+  if (code && [408, 500, 502, 503, 504].includes(code)) {
     return true
   }
   const msg = (anyErr.message ?? '').toLowerCase()

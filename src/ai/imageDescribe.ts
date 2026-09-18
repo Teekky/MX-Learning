@@ -7,7 +7,8 @@
  * remote URLs to the model.
  */
 
-import { getMistralClient } from './mistral'
+import { assertOnline } from './chat'
+import { getMistralClient } from './mistralClient'
 import type { Level } from '@/types'
 
 const VISION_MODEL =
@@ -68,7 +69,8 @@ export async function gradeImageDescription(
   userDescription: string,
   level: Level = 'B2',
 ): Promise<ImageGrade> {
-  const client = getMistralClient()
+  assertOnline()
+  const client = await getMistralClient()
 
   const call = () =>
     client.chat.complete({

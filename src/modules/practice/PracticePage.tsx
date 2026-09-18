@@ -117,10 +117,12 @@ export function PracticePage() {
                 </button>
               </div>
               <div className="min-w-0 w-full">
-                <div className="font-display text-base font-semibold text-text">
+                {/* A real heading, and a size step above the blurb: the grid
+                    is scanned by title, so the title has to win. */}
+                <h2 className="font-display text-tile font-semibold text-text">
                   {t.title}
-                </div>
-                <div className="mt-1 min-h-[2.5rem] text-sm text-text-muted line-clamp-2">
+                </h2>
+                <div className="mt-1.5 min-h-[2.5rem] text-sm text-text-muted line-clamp-2">
                   {t.blurb}
                 </div>
               </div>

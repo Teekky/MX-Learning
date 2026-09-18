@@ -10,12 +10,17 @@
  *   - achievements: unlock state
  *   - tags: hierarchical tagging
  *   - settings: singleton — theme, sound, voice
+ *   - levelChecks: history of CEFR placement/retake results
+ *   - aussieProgress: per-domain progress for the Aussie module
  */
 
 import Dexie, { type Table } from 'dexie'
+import { DB_NAME, IS_DEMO } from '@/config'
 import type {
   Achievement,
+  AussieProgress,
   DailyLog,
+  LevelCheck,
   Review,
   Settings,
   SRSCard,
@@ -33,9 +38,12 @@ class MXDatabase extends Dexie {
   achievements!: Table<Achievement, string>
   tags!: Table<Tag, number>
   settings!: Table<Settings, number>
+  levelChecks!: Table<LevelCheck, number>
+  aussieProgress!: Table<AussieProgress, string>
 
   constructor() {
-    super('mx-learning')
+    // `mx-learning` in production, `mx-learning-demo` in staging. See src/config.ts.
+    super(DB_NAME)
 
     this.version(1).stores({
       // ++id = auto-incrementing primary key; & = unique; * = multi-entry
@@ -47,6 +55,25 @@ class MXDatabase extends Dexie {
       achievements: 'id, unlockedAt',
       tags: '++id, &name, parentId',
       settings: 'id',
+    })
+
+    // v2 — index `partOfSpeech` so the idioms module can pull its slice of the
+    // deck without scanning every word. Purely additive: existing rows are
+    // re-indexed in place by Dexie, no data is rewritten or lost.
+    this.version(2).stores({
+      words: '++id, lemma, level, *tags, frequencyRank, source, addedAt, partOfSpeech',
+    })
+
+    // v3 — `levelChecks`: one row per completed placement/retake test, so
+    // progress over time (level, score) can be charted in the profile.
+    this.version(3).stores({
+      levelChecks: '++id, date',
+    })
+
+    // v4 — `aussieProgress`: one row per Aussie-module domain (mining, farm
+    // work, …), tracking completion separately from the main deck.
+    this.version(4).stores({
+      aussieProgress: 'domainId',
     })
   }
 }
@@ -82,8 +109,7 @@ const DEFAULT_SETTINGS: Settings = {
   voicePitch: 1,
   difficultyOffset: 0,
   onboardingComplete: false,
-  reminderEnabled: false,
-  reminderHour: 20, // 8 pm — late enough to know if the user did their day, early enough to act
+  aussieAccent: true,
 }
 
 /**
@@ -118,8 +144,22 @@ async function doBootstrap(): Promise<void> {
       db.settings.count(),
     ])
     if (statsCount === 0) await db.userStats.add(DEFAULT_USER_STATS)
-    if (settingsCount === 0) await db.settings.add(DEFAULT_SETTINGS)
+    if (settingsCount === 0) {
+      await db.settings.add(
+        // Staging exists to look at screens, not to retake the CEFR test on
+        // every fresh demo database.
+        IS_DEMO
+          ? { ...DEFAULT_SETTINGS, onboardingComplete: true }
+          : DEFAULT_SETTINGS,
+      )
+    }
   })
+
+  if (IS_DEMO) {
+    // Dynamic import so the fixture never reaches a production bundle.
+    const { seedDemoData } = await import('./demoSeed')
+    await seedDemoData()
+  }
   // NOTE: We intentionally DO NOT auto-seed vocabulary anymore.
   // The deck should reflect what the user has learned — built via
   // "Learn from anything" (paste text) and other content flows.

@@ -107,7 +107,6 @@ export function startRecognition(
   // of a network block or unrecognised accent. The user can open the
   // console and see exactly which events fired and which didn't.
   const dbg = (msg: string, ...rest: unknown[]) =>
-    // eslint-disable-next-line no-console
     console.log(`[stt] ${msg}`, ...rest)
 
   rec.onstart = () => {
@@ -139,7 +138,6 @@ export function startRecognition(
     }
   }
   rec.onerror = (ev) => {
-    // eslint-disable-next-line no-console
     console.warn(`[stt] onerror — ${ev.error}`, ev.message ?? '')
     cbs.onError?.(ev.error)
   }

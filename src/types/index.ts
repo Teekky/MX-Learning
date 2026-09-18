@@ -3,6 +3,8 @@
  * Single source of truth for the data model used across DB, store, and UI.
  */
 
+import type { LucideIcon } from 'lucide-react'
+
 /** CEFR level. */
 export type Level = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
 
@@ -15,6 +17,7 @@ export type PartOfSpeech =
   | 'preposition'
   | 'conjunction'
   | 'pronoun'
+  | 'determiner'
   | 'interjection'
   | 'phrase'
   | 'idiom'
@@ -44,10 +47,32 @@ export interface Word {
   addedAt: number
   /** Whether this word came from the seed set or was added dynamically. */
   source: 'seed' | 'mistral' | 'user' | 'session'
+
+  /* --- Idiom-specific metadata (partOfSpeech === 'idiom' | 'phrase') --- */
+
+  /**
+   * How the expression lands socially. Idioms are register-sensitive in a way
+   * single words rarely are — "spill the beans" in a board meeting reads very
+   * differently from "disclose". Displayed as a badge so the learner knows
+   * where an expression is safe to use.
+   */
+  register?: 'informal' | 'neutral' | 'formal'
+  /**
+   * Regional variant. `both` means the expression travels; `BrE`/`AmE` warn
+   * that the other side of the Atlantic will hear it as foreign.
+   */
+  variant?: 'BrE' | 'AmE' | 'both'
+  /**
+   * Literal reading, for idioms whose surface meaning is misleading
+   * (e.g. "bite the bullet" → "to bite a bullet"). Purely explanatory.
+   */
+  literal?: string
 }
 
 /** Type of exercise — drives Dynamic Weighting. */
 export type ExerciseType =
+  /** The signature review screen: recall a word from its front face alone. */
+  | 'flashcard'
   | 'fill-in-blank'
   | 'random-words-context'
   | 'time-attack'
@@ -161,6 +186,75 @@ export interface Tag {
   parentId?: number
 }
 
+/** One completed pass of the CEFR placement/retake test — history for progress tracking. */
+export interface LevelCheck {
+  id?: number
+  /** When this attempt was completed (ms since epoch). */
+  date: number
+  cefrLevel: Level
+  score: number
+  maxScore: number
+}
+
+/**
+ * A bundled Aussie-module word: everything a Word needs except its
+ * per-install fields, plus an icon shown on its flashcard while learning.
+ * The icon is a component reference — strip it before writing to Dexie.
+ */
+export interface AussieWordSeed extends Omit<Word, 'id' | 'addedAt' | 'source'> {
+  icon: LucideIcon
+}
+
+/**
+ * One workplace/life domain in the "Aussie" module — the working-holiday
+ * survival vocabulary (mining, farm work, hospitality, visas, slang…).
+ * Each domain teaches its own words before drilling them, so `words` lives
+ * on the domain rather than in a separate lookup table.
+ */
+export interface AussieDomain {
+  id: string
+  name: string
+  blurb: string
+  /** Icon for the domain tile — from the same lucide-react set as the sidebar. */
+  icon: LucideIcon
+  /** False for a domain that only exists as a placeholder on the grid so far. */
+  ready: boolean
+  words: AussieWordSeed[]
+}
+
+/** The two independent drill types a domain's parts can be practiced with. */
+export type AussieDomainSkill = 'quiz' | 'context'
+
+/** Best result recorded for one quiz part. */
+export interface AussiePartResult {
+  bestScore: number
+  timesCompleted: number
+  lastPracticedAt: number
+}
+
+/**
+ * Per-domain progress — tracked separately from the main FSRS deck.
+ *
+ * "Learn the words", "Take the quiz" and "Real-life context" are three
+ * independent entry points — a learner can do any of them first, or only
+ * one. Quiz and context practice are each split into fixed parts (Part 1,
+ * Part 2, …) of `AUSSIE_PART_SIZE` words, taken from the domain's authored
+ * word order, so each part stays the same set of words across visits and
+ * can be listed and picked individually. The two skills are tracked in
+ * separate buckets since a multiple-choice score and a typed-cloze score
+ * aren't comparable.
+ */
+export interface AussieProgress {
+  /** Primary key. */
+  domainId: string
+  /** Set once "Learn the words" has been opened and finished at least once. */
+  taughtAt?: number
+  /** Quiz (multiple-choice) results per part, keyed by part index (0-based). */
+  quizParts: Record<number, AussiePartResult>
+  /** Context (fill-in-the-blank) results per part, keyed by part index (0-based). */
+  contextParts: Record<number, AussiePartResult>
+}
+
 /** App-level settings persisted across sessions. */
 export interface Settings {
   id: 1 // singleton
@@ -174,8 +268,10 @@ export interface Settings {
   difficultyOffset: number
   /** True once the user has seen / completed the onboarding test. */
   onboardingComplete?: boolean
-  /** When true, attempt to remind the user once a day if no activity yet. */
-  reminderEnabled?: boolean
-  /** Hour of day (0–23, local time) at which the reminder may fire. */
-  reminderHour?: number
+  /**
+   * Prefer an Australian-accented voice for the Aussie module's TTS.
+   * Defaults to true when unset. Falls back silently to the normal voice
+   * on a browser/OS with no `en-AU` voice available.
+   */
+  aussieAccent?: boolean
 }

@@ -10,7 +10,10 @@ export function normalize(s: string): string {
     .toLowerCase()
     .trim()
     .replace(/\s+/g, ' ')
-    .replace(/[''`]/g, "'")
+    // Fold every apostrophe variant — straight, backtick, and the curly
+    // quotes that AI-generated sentences and phone keyboards emit — so
+    // "don't" and "don’t" compare equal.
+    .replace(/['`´‘’ʼ]/g, "'")
 }
 
 /**

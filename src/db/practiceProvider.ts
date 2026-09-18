@@ -26,9 +26,25 @@
 
 import { db } from './database'
 import { getDuePairs } from './queries'
-import { SEED_WORDS } from '@/data/seedWords'
 import { newCard } from '@/utils/fsrs'
 import type { Level, SRSCard, Word } from '@/types'
+
+/**
+ * The curated seed pool (`src/data/seedWords.ts`) is ~600 kB — larger than
+ * the rest of the app put together. It is only ever needed as a *fallback*
+ * when the user's deck is too thin to fill a session, so it is loaded
+ * lazily on the first practice batch rather than bundled into every SRS
+ * session chunk. Cached after the first call.
+ */
+type SeedEntry = (typeof import('@/data/seedWords'))['SEED_WORDS'][number]
+
+let _seedWords: Promise<readonly SeedEntry[]> | null = null
+function loadSeedWords(): Promise<readonly SeedEntry[]> {
+  if (!_seedWords) {
+    _seedWords = import('@/data/seedWords').then((m) => m.SEED_WORDS)
+  }
+  return _seedWords
+}
 
 /* ----------------------------- Types --------------------------------- */
 
@@ -59,10 +75,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 /** Build a transient pair (in-memory only) from a seed entry. */
-function transientPair(
-  seed: (typeof SEED_WORDS)[number],
-  now: number,
-): PracticePair {
+function transientPair(seed: SeedEntry, now: number): PracticePair {
   const word: Word = { ...seed, source: 'seed', addedAt: now }
   // wordId=0 is a placeholder; replaced when persisted.
   const card: SRSCard = newCard(0, now)
@@ -102,7 +115,10 @@ export async function getPracticeBatch(
   if (persisted.length >= limit) return persisted
 
   const need = limit - persisted.length
-  const allWords = await db.words.toArray()
+  const [allWords, SEED_WORDS] = await Promise.all([
+    db.words.toArray(),
+    loadSeedWords(),
+  ])
   const taken = new Set<string>([
     ...persisted.map((p) => p.word.lemma.toLowerCase()),
     ...allWords.map((w) => w.lemma.toLowerCase()),
@@ -192,7 +208,10 @@ export async function getPracticeWordPool(
   filter: (w: Word) => boolean = () => true,
 ): Promise<PracticeWord[]> {
   const allowSet = allowedLevels ? new Set(allowedLevels) : null
-  const persistedAll = await db.words.toArray()
+  const [persistedAll, SEED_WORDS] = await Promise.all([
+    db.words.toArray(),
+    loadSeedWords(),
+  ])
   const persisted: PracticeWord[] = persistedAll
     .filter((w) => (!allowSet || allowSet.has(w.level)) && filter(w))
     .map((w) => ({ word: w, transient: false, key: `db:${w.id}` }))

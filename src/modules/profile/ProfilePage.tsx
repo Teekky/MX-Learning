@@ -8,6 +8,7 @@
 
 import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/store/useAppStore'
 import { levelFromXp } from '@/utils/levels'
 import { getTodayLog } from '@/utils/dailyLog'
@@ -18,7 +19,7 @@ import {
   type AchievementDef,
 } from '@/utils/achievements'
 import { PageLoader } from '@/components/PageLoader'
-import type { DailyLog, Level } from '@/types'
+import type { DailyLog } from '@/types'
 
 type AchievementRow = AchievementDef & { unlockedAt?: number }
 
@@ -28,6 +29,7 @@ const HISTORY_DAYS = 30
 const HEATMAP_DAYS = 91 // ~13 weeks — fits a clean 7-row grid
 
 export function ProfilePage() {
+  const navigate = useNavigate()
   const stats = useAppStore((s) => s.stats)
   const sessionReviews = useAppStore((s) => s.session.reviewsDone)
   const toasts = useAppStore((s) => s.toasts)
@@ -102,17 +104,25 @@ export function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <header>
-        <h1 className="mb-1 font-display text-3xl font-semibold tracking-tight">
-          {stats.displayName}
-        </h1>
-        <p className="text-text-muted">
-          {lvl.name} · CEFR {stats.cefrLevel} · joined{' '}
-          {new Date(stats.createdAt).toLocaleDateString('en-US', {
-            month: 'long',
-            year: 'numeric',
-          })}
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="mb-1 font-display text-3xl font-semibold tracking-tight">
+            {stats.displayName}
+          </h1>
+          <p className="text-text-muted">
+            {lvl.name} · CEFR {stats.cefrLevel} · joined{' '}
+            {new Date(stats.createdAt).toLocaleDateString('en-US', {
+              month: 'long',
+              year: 'numeric',
+            })}
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/level-check')}
+          className="btn-ghost shrink-0"
+        >
+          Retest my level →
+        </button>
       </header>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">

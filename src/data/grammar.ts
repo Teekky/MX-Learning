@@ -1079,7 +1079,7 @@ The "were" (not "was") is the careful choice with "I wish I were…" — same ru
 **Souhait sur le passé** (regret) — past perfect.
 *I wish I had studied harder. / If only she had told me sooner.*
 
-**Souhait sur l\'habitude agaçante d\'autrui** — "would + verbe à la base" (sur une autre personne, pas soi).
+**Souhait sur l'habitude agaçante d'autrui** — "would + verbe à la base" (sur une autre personne, pas soi).
 *I wish you would stop interrupting. / If only the wifi would work.*
 
 Note : avec "I wish I would" → utiliser "could" à la place. *I wish I could swim* (pas "I wish I would swim").
@@ -1131,9 +1131,9 @@ Patterns to memorise:
 With verbs, "neither" + singular verb in formal English: *Neither option is good.* But colloquial English often uses plural.`,
     ruleFr: `**both** = les deux (positif). *Both options work.*
 
-**either** = l\'un OU l\'autre (positif dans un choix ; forme négative = "neither"). *Either option works. / I don\'t like either.*
+**either** = l'un OU l'autre (positif dans un choix ; forme négative = "neither"). *Either option works. / I don't like either.*
 
-**neither** = NI l\'un NI l\'autre (un seul mot, pas de "not" en plus). *Neither option works.*
+**neither** = NI l'un NI l'autre (un seul mot, pas de "not" en plus). *Neither option works.*
 
 **all** = trois ou plus (positif). *All three options work.*
 
@@ -1142,7 +1142,7 @@ Patterns à mémoriser :
 - *either X or Y* — either Sarah or Mike
 - *neither X nor Y* — neither Sarah nor Mike (note : "nor", pas "or")
 
-Avec un verbe, "neither" + verbe au singulier en anglais soigné : *Neither option is good.* L\'oral relâché met souvent au pluriel.`,
+Avec un verbe, "neither" + verbe au singulier en anglais soigné : *Neither option is good.* L'oral relâché met souvent au pluriel.`,
     examples: [
       { en: 'Both designers are senior.', fr: 'Les deux designers sont seniors.', note: '"Both" + plural verb.', noteFr: '"Both" + verbe au pluriel.' },
       { en: 'Either Tuesday or Thursday works for me.', fr: 'Mardi ou jeudi me va.', note: '"Either + or".', noteFr: '"Either + or".' },
@@ -1188,13 +1188,13 @@ Both are followed by the BARE infinitive (no "to"):
 "Had better" is stronger than "should" — it implies a real consequence if you don't.`,
     ruleFr: `**would rather + verbe à la base** — préférence (= préférer). *I'd rather stay home.*
 
-**would rather + (autre personne) + prétérit** — préférence sur l\'action d\'autrui. *I'd rather you didn't smoke here.* (PAS "I'd rather you don't smoke")
+**would rather + (autre personne) + prétérit** — préférence sur l'action d'autrui. *I'd rather you didn't smoke here.* (PAS "I'd rather you don't smoke")
 
 **had better + verbe à la base** — conseil fort ou avertissement, avec conséquence négative implicite. *You'd better leave now or you'll miss the train.*
 
 **had better NOT + verbe à la base** — avertissement négatif. *You'd better not be late.* (PAS "you'd not better")
 
-Les deux sont suivis de l\'infinitif SANS "to" :
+Les deux sont suivis de l'infinitif SANS "to" :
 - ✓ *I'd rather walk.* / *You'd better hurry.*
 - ✗ *I'd rather to walk.* / *You'd better to hurry.*
 
@@ -1251,7 +1251,7 @@ Don't confuse "however" with "although" — "however" can't replace "although" i
 *Despite the rain, we went out.*
 *Despite being tired, I finished the report.*
 
-**Important** : "despite" / "in spite of" ne peuvent PAS être suivis directement d\'une proposition. Pour ajouter une proposition : "despite the fact that…" :
+**Important** : "despite" / "in spite of" ne peuvent PAS être suivis directement d'une proposition. Pour ajouter une proposition : "despite the fact that…" :
 - ✗ *Despite it was raining, we went out.*
 - ✓ *Despite the fact that it was raining, we went out.*
 

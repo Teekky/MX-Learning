@@ -1,14 +1,19 @@
 /**
  * CEFR placement test — question bank + pickers.
  *
- * The bank is wider than a single test (~55 items across A2..C2) and uses
- * four exercise types so the test can sample more dimensions of skill than
+ * The bank is wider than a single test (~70 items across A2..C2) and uses
+ * three exercise types so the test can sample more dimensions of skill than
  * passive recognition:
  *
  *   - 'multiple-choice' — pick the right option (vocab, grammar, register).
- *   - 'fill-blank'      — type the missing word in a sentence (active recall).
  *   - 'spot-error'      — find the sentence with the subtle error (analysis).
  *   - 'idiom'           — choose the meaning of an English idiom (cultural fluency).
+ *
+ * A fourth type, 'fill-blank' (type a word into a blank), used to be part of
+ * the bank but was dropped: typing a bare word with no options felt far
+ * harder than the other formats once the test moved past B1, and it was
+ * failing learners on recall/spelling rather than on the level it was meant
+ * to test.
  *
  * Each draw pulls 20 items, weighted toward C1/C2 for advanced learners. The
  * curve and per-level shuffling make sure no two retakes feel the same. The
@@ -17,11 +22,7 @@
 
 import type { Level } from '@/types'
 
-export type OnboardingQuestionType =
-  | 'multiple-choice'
-  | 'fill-blank'
-  | 'spot-error'
-  | 'idiom'
+export type OnboardingQuestionType = 'multiple-choice' | 'spot-error' | 'idiom'
 
 interface BaseQuestion {
   id: string
@@ -36,17 +37,6 @@ export interface MultipleChoiceQuestion extends BaseQuestion {
   options: string[]
   /** Index of the correct option in `options`. */
   answer: number
-}
-
-/** Type a single English word into the blank. Accepts a small alias list. */
-export interface FillBlankQuestion extends BaseQuestion {
-  type: 'fill-blank'
-  /** The full sentence with `___` standing in for the answer. */
-  prompt: string
-  /** Canonical answer (used as the displayed correction). */
-  answer: string
-  /** Other accepted spellings / forms (case-insensitive). */
-  acceptedAnswers?: string[]
 }
 
 /** Pick the sentence that contains a subtle error. */
@@ -70,7 +60,6 @@ export interface IdiomQuestion extends BaseQuestion {
 
 export type OnboardingQuestion =
   | MultipleChoiceQuestion
-  | FillBlankQuestion
   | SpotErrorQuestion
   | IdiomQuestion
 
@@ -135,14 +124,6 @@ const BANK: OnboardingQuestion[] = [
     answer: 1,
     explanation: 'Short adjectives form the comparative with -er: "tall → taller".',
   },
-  {
-    id: 'a2-fb-1',
-    level: 'A2',
-    type: 'fill-blank',
-    prompt: 'I usually ___ to school by bus.',
-    answer: 'go',
-    explanation: 'Habitual present action with "I" → "go".',
-  },
 
   // --- B1 --------------------------------------------------------------
   {
@@ -204,22 +185,6 @@ const BANK: OnboardingQuestion[] = [
     options: ['to see', 'seeing', 'to seeing', 'for see'],
     answer: 2,
     explanation: '"Look forward to" is followed by a gerund: "to seeing".',
-  },
-  {
-    id: 'b1-fb-1',
-    level: 'B1',
-    type: 'fill-blank',
-    prompt: 'I have lived here ___ 2019.',
-    answer: 'since',
-    explanation: '"Since" with a starting point in time; "for" with a duration.',
-  },
-  {
-    id: 'b1-fb-2',
-    level: 'B1',
-    type: 'fill-blank',
-    prompt: 'She is taller ___ her brother.',
-    answer: 'than',
-    explanation: 'Comparatives are followed by "than".',
   },
   {
     id: 'b1-se-1',
@@ -305,24 +270,6 @@ const BANK: OnboardingQuestion[] = [
     options: ['push it', 'push back', 'push in', 'push at'],
     answer: 1,
     explanation: 'To "push back a meeting" = to delay it. The other phrasal verbs mean different things.',
-  },
-  {
-    id: 'b2-fb-1',
-    level: 'B2',
-    type: 'fill-blank',
-    prompt: 'If I ___ you, I would take the job offer.',
-    answer: 'were',
-    acceptedAnswers: ['was'],
-    explanation: 'Second conditional uses "were" for all subjects in careful English ("was" is informal).',
-  },
-  {
-    id: 'b2-fb-2',
-    level: 'B2',
-    type: 'fill-blank',
-    prompt: 'The report needs to be ___ by Friday.',
-    answer: 'submitted',
-    acceptedAnswers: ['delivered', 'finished', 'completed'],
-    explanation: 'A passive verb that fits a deadline context — "submitted" is the most natural.',
   },
   {
     id: 'b2-se-1',
@@ -424,23 +371,6 @@ const BANK: OnboardingQuestion[] = [
     options: ['she met', 'met she', 'did she meet', 'she did meet'],
     answer: 2,
     explanation: 'After a fronted negative ("Not only"), the subject and auxiliary invert.',
-  },
-  {
-    id: 'c1-fb-1',
-    level: 'C1',
-    type: 'fill-blank',
-    prompt: 'Despite the setback, the team managed to ___ on schedule.',
-    answer: 'deliver',
-    acceptedAnswers: ['ship', 'finish'],
-    explanation: 'Professional context — "deliver" is the standard verb for keeping a deadline.',
-  },
-  {
-    id: 'c1-fb-2',
-    level: 'C1',
-    type: 'fill-blank',
-    prompt: "Her argument was compelling, ___ a little long-winded.",
-    answer: 'if',
-    explanation: '"If a little X" is a polished way to add a mild concession.',
   },
   {
     id: 'c1-se-1',
@@ -568,22 +498,6 @@ const BANK: OnboardingQuestion[] = [
     explanation: '"Because" is direct. The others are wordier paraphrases.',
   },
   {
-    id: 'c2-fb-1',
-    level: 'C2',
-    type: 'fill-blank',
-    prompt: 'Her resignation came as no ___ — the warning signs had been there for months.',
-    answer: 'surprise',
-    explanation: '"Came as no surprise" is the natural collocation.',
-  },
-  {
-    id: 'c2-fb-2',
-    level: 'C2',
-    type: 'fill-blank',
-    prompt: 'The decision was, in ___, an admission that the strategy had failed.',
-    answer: 'effect',
-    explanation: '"In effect" = essentially / in practice. A tight, near-native marker.',
-  },
-  {
     id: 'c2-se-1',
     level: 'C2',
     type: 'spot-error',
@@ -654,7 +568,7 @@ const BANK: OnboardingQuestion[] = [
     explanation: 'Means: take the opposite side of an argument for the sake of debate.',
   },
 
-  /* ----- A2 (6 more) ----- */
+  /* ----- A2 (more) ----- */
   {
     id: 'a2-mc-6',
     level: 'A2',
@@ -672,22 +586,6 @@ const BANK: OnboardingQuestion[] = [
     options: ['do', 'are', 'does', 'is'],
     answer: 0,
     explanation: 'Question with "you" in present simple → auxiliary "do".',
-  },
-  {
-    id: 'a2-fb-2',
-    level: 'A2',
-    type: 'fill-blank',
-    prompt: 'There ___ five people in the room.',
-    answer: 'are',
-    explanation: 'Plural subject "five people" → "are".',
-  },
-  {
-    id: 'a2-fb-3',
-    level: 'A2',
-    type: 'fill-blank',
-    prompt: 'I am hungry. I want ___ eat.',
-    answer: 'to',
-    explanation: '"Want + to + base verb".',
   },
   {
     id: 'a2-mc-8',
@@ -708,7 +606,7 @@ const BANK: OnboardingQuestion[] = [
     explanation: 'First person → "I LIKE pizza" (no -s).',
   },
 
-  /* ----- B1 (6 more) ----- */
+  /* ----- B1 (more) ----- */
   {
     id: 'b1-mc-7',
     level: 'B1',
@@ -728,14 +626,6 @@ const BANK: OnboardingQuestion[] = [
     explanation: '"Good AT" + skill. "Good with" is for people/things you handle well.',
   },
   {
-    id: 'b1-fb-3',
-    level: 'B1',
-    type: 'fill-blank',
-    prompt: "I'm interested ___ learning Italian.",
-    answer: 'in',
-    explanation: '"Interested in + gerund" — fixed preposition.',
-  },
-  {
     id: 'b1-se-2',
     level: 'B1',
     type: 'spot-error',
@@ -753,26 +643,8 @@ const BANK: OnboardingQuestion[] = [
     answer: 1,
     explanation: '"Would you like" is the polite offer pattern.',
   },
-  {
-    id: 'b1-fb-4',
-    level: 'B1',
-    type: 'fill-blank',
-    prompt: 'If it rains, we ___ stay home.',
-    answer: 'will',
-    acceptedAnswers: ["'ll"],
-    explanation: 'First conditional: "if + present, will + base".',
-  },
 
-  /* ----- B2 (5 more) ----- */
-  {
-    id: 'b2-fb-3',
-    level: 'B2',
-    type: 'fill-blank',
-    prompt: 'I wish I ___ (be) better at remembering names.',
-    answer: 'were',
-    acceptedAnswers: ['was'],
-    explanation: 'After "wish" (present) → past simple. "Were" preferred for all subjects in careful English.',
-  },
+  /* ----- B2 (more) ----- */
   {
     id: 'b2-mc-7',
     level: 'B2',
@@ -815,7 +687,7 @@ const BANK: OnboardingQuestion[] = [
     explanation: 'Causative "have something done": "I had my hair cut" = someone cut it for me.',
   },
 
-  /* ----- C1 (8 more) ----- */
+  /* ----- C1 (more) ----- */
   {
     id: 'c1-mc-7',
     level: 'C1',
@@ -833,15 +705,6 @@ const BANK: OnboardingQuestion[] = [
     options: ['This is arguably the best option.', 'This is more best option.', 'This is the most best option.', 'This is the best option arguably.'],
     answer: 0,
     explanation: '"Arguably" is the polished hedge native speakers use.',
-  },
-  {
-    id: 'c1-fb-3',
-    level: 'C1',
-    type: 'fill-blank',
-    prompt: 'I\'d rather you ___ (not / mention) this in the meeting.',
-    answer: "didn't mention",
-    acceptedAnswers: ['did not mention'],
-    explanation: '"Would rather + person + past tense (negative)".',
   },
   {
     id: 'c1-se-3',
@@ -876,14 +739,6 @@ const BANK: OnboardingQuestion[] = [
     explanation: 'After "essential that" → bare subjunctive "be".',
   },
   {
-    id: 'c1-fb-4',
-    level: 'C1',
-    type: 'fill-blank',
-    prompt: 'Rarely ___ I seen such clean code.',
-    answer: 'have',
-    explanation: 'Inversion after fronted "Rarely" → "have I seen".',
-  },
-  {
     id: 'c1-id-4',
     level: 'C1',
     type: 'idiom',
@@ -898,7 +753,7 @@ const BANK: OnboardingQuestion[] = [
     explanation: '"Read between the lines" = grasp what isn\'t explicitly said.',
   },
 
-  /* ----- C2 (5 more) ----- */
+  /* ----- C2 (more) ----- */
   {
     id: 'c2-mc-6',
     level: 'C2',
@@ -940,24 +795,12 @@ const BANK: OnboardingQuestion[] = [
     answer: 1,
     explanation: '"Sharp wit" is the natural collocation.',
   },
-  {
-    id: 'c2-fb-3',
-    level: 'C2',
-    type: 'fill-blank',
-    prompt: "Were it ___ to me, I'd take the offer.",
-    answer: 'up',
-    explanation: '"Were it up to me" = "if it depended on me" — formal inversion.',
-  },
   { id: 'a2-mc-9', level: 'A2', type: 'multiple-choice', prompt: 'Pick the right answer: "How ___ are you?"', options: ['old', 'years', 'age', 'aged'], answer: 0, explanation: 'Standard question pattern: "How old are you?"' },
-  { id: 'a2-fb-4', level: 'A2', type: 'fill-blank', prompt: 'My sister is ___ doctor.', answer: 'a', explanation: 'Profession after "is" → "a" (singular countable, first mention).' },
   { id: 'a2-mc-10', level: 'A2', type: 'multiple-choice', prompt: 'Pick the right answer: "There ___ a problem."', options: ['is', 'are', 'have', 'has'], answer: 0, explanation: 'Singular subject "a problem" → "is".' },
   { id: 'b1-mc-10', level: 'B1', type: 'multiple-choice', prompt: 'Choose the natural sentence.', options: ['I look forward to hear from you.', 'I look forward to hearing from you.', 'I look forward hear from you.', 'I look forward to hears from you.'], answer: 1, explanation: '"Look forward TO + gerund". Fixed pattern.' },
-  { id: 'b1-fb-5', level: 'B1', type: 'fill-blank', prompt: 'I am tired ___ working late.', answer: 'of', explanation: '"Tired of + gerund" — fixed preposition.' },
   { id: 'b1-se-3', level: 'B1', type: 'spot-error', prompt: 'Which sentence is wrong?', options: ['She enjoys reading novels.', 'She enjoys to read novels.', "She likes to read novels.", "She loves reading novels."], answer: 1, explanation: '"Enjoy" + gerund. Use "She enjoys reading novels".' },
-  { id: 'b2-fb-4', level: 'B2', type: 'fill-blank', prompt: 'I should ___ called you yesterday.', answer: 'have', explanation: '"Should have + past participle" for past regret.' },
   { id: 'b2-mc-9', level: 'B2', type: 'multiple-choice', prompt: 'Pick the natural sentence.', options: ['By the time you arrive, the meeting will start.', 'By the time you arrive, the meeting will have started.', 'By the time you arrive, the meeting starts.', 'By the time you arrive, the meeting will be started.'], answer: 1, explanation: '"By the time + clause" → future perfect "will have started".' },
   { id: 'c1-mc-10', level: 'C1', type: 'multiple-choice', prompt: 'Pick the most native phrasing.', options: ['I have got the bandwidth to take this on.', 'I have the bandwidth to take this on.', 'Both work — 1 is more British/colloquial, 2 is more universal.', 'I have got bandwidth taking this on.'], answer: 2, explanation: 'Both work; "I have" is more universal in business contexts.' },
-  { id: 'c1-fb-5', level: 'C1', type: 'fill-blank', prompt: "Hardly ___ I sat down when the phone rang.", answer: 'had', explanation: 'Inversion after fronted "Hardly" + past perfect → "had I sat".' },
   { id: 'c1-id-5', level: 'C1', type: 'idiom', idiom: 'to cut corners', options: ['to take the fastest route', 'to do something cheaply or carelessly', 'to make sharp turns', 'to stop a project early'], answer: 1, explanation: '"Cut corners" = skip steps to save time/money, often at quality\'s expense.' },
   { id: 'c2-id-5', level: 'C2', type: 'idiom', idiom: 'to bury the lede', options: ['to start a story slowly', 'to forget the most important point', 'to put the most important info too late in your message', 'to refuse to speak'], answer: 2, explanation: 'Journalism idiom now common in business: hiding the key point under context.' },
 ]
@@ -987,13 +830,8 @@ function shuffleInPlace<T>(arr: T[]): T[] {
   return arr
 }
 
-/**
- * Randomize the order of options for question types that have them, and
- * update `answer` to the new index of the correct option. Fill-blank
- * questions have no options so they pass through untouched.
- */
+/** Randomize the order of options, and update `answer` to the new index. */
 function shuffleOptions(q: OnboardingQuestion): OnboardingQuestion {
-  if (q.type === 'fill-blank') return q
   const pairs = q.options.map((opt, i) => ({ opt, correct: i === q.answer }))
   shuffleInPlace(pairs)
   return {
@@ -1083,28 +921,13 @@ export function maxScore(): number {
 }
 
 /**
- * Score a learner's answer.
- *
- * Multiple-choice / spot-error / idiom: the answer is the index of the
- * option they tapped. A correct pick yields the level's full point value.
- *
- * Fill-blank: the answer is the typed string. Match against the canonical
- * answer + any acceptedAnswers, case-insensitively, ignoring surrounding
- * whitespace. Partial credit isn't worth the complexity at this stage.
+ * Score a learner's answer — the index of the option they tapped. A
+ * correct pick yields the level's full point value.
  */
 export function scoreAnswer(
   q: OnboardingQuestion,
   response: number | string,
 ): number {
-  if (q.type === 'fill-blank') {
-    if (typeof response !== 'string') return 0
-    const candidate = response.trim().toLowerCase()
-    if (!candidate) return 0
-    const accepted = [q.answer, ...(q.acceptedAnswers ?? [])].map((a) =>
-      a.trim().toLowerCase(),
-    )
-    return accepted.includes(candidate) ? POINTS[q.level] : 0
-  }
   if (typeof response !== 'number') return 0
   return response === q.answer ? POINTS[q.level] : 0
 }
@@ -1127,4 +950,26 @@ export function levelFromScore(total: number): Level {
 /** How many questions each draw contains. */
 export function questionCount(): number {
   return (Object.keys(CURVE) as Level[]).reduce((s, lv) => s + CURVE[lv], 0)
+}
+
+/** Monotonic difficulty rank (A1=0 .. C2=5) — for comparing two levels. */
+export function levelRank(level: Level): number {
+  return LEVEL_ORDER[level]
+}
+
+/** One-line framing of what practice will feel like at this level. */
+export function messageFor(level: Level): string {
+  switch (level) {
+    case 'A1':
+    case 'A2':
+      return "We'll start gently. Expect everyday vocabulary and short, supportive sessions."
+    case 'B1':
+      return 'Solid foundation. Practice will lean into fluency and natural phrasing.'
+    case 'B2':
+      return "You're comfortable in most situations. We'll sharpen precision and idiom."
+    case 'C1':
+      return 'Strong command. Expect nuance, register, and professional-grade phrasing.'
+    case 'C2':
+      return "Near-native. We'll push toward literary nuance and rare idioms."
+  }
 }

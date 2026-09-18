@@ -1,5 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+
+/* Self-hosted variable fonts — no third-party origin, works offline, and
+   both files are precached by the service worker. Fraunces carries the
+   display voice, Inter the interface text. */
+import '@fontsource-variable/fraunces'
+import '@fontsource-variable/inter'
+
+import './tokens.css'
 import './index.css'
 import App from './App.tsx'
 

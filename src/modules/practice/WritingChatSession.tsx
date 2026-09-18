@@ -20,6 +20,8 @@ import { tutorOpener, tutorReply } from '@/ai/tutor'
 import type { ChatMessage } from '@/ai/chat'
 import { recordReview } from '@/utils/dailyLog'
 import { useAppStore } from '@/store/useAppStore'
+import { useCoarsePointer } from '@/utils/usePointer'
+import { noAutofill } from '@/utils/noAutofill'
 
 const XP_PER_MESSAGE = 3
 const XP_CLEAN_BONUS = 2 // +2 when the user message needed no correction
@@ -48,6 +50,7 @@ export function WritingChatSession() {
   const registerCorrect = useAppStore((s) => s.registerCorrect)
   const notifyDailyLog = useAppStore((s) => s.notifyDailyLog)
   const stats = useAppStore((s) => s.stats)
+  const coarsePointer = useCoarsePointer()
 
   const [state, setState] = useState<State>(() =>
     hasMistralKey()
@@ -181,12 +184,17 @@ export function WritingChatSession() {
           Mistral API key missing.
         </h1>
         <p className="mb-6 text-text-muted">
-          Add <code className="rounded bg-bg-subtle px-1.5">VITE_MISTRAL_API_KEY</code> to
-          <code className="rounded bg-bg-subtle px-1.5"> .env.local</code> to use the writing chat.
+          Paste your own key in Settings → AI connection to use the writing
+          chat.
         </p>
-        <Link to="/practice" className="btn-ghost inline-flex">
-          ← Back to practice menu
-        </Link>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link to="/settings" className="btn-primary inline-flex">
+            Open settings
+          </Link>
+          <Link to="/practice" className="btn-ghost inline-flex">
+            ← Back to practice menu
+          </Link>
+        </div>
       </div>
     )
   }
@@ -257,7 +265,7 @@ export function WritingChatSession() {
       </div>
 
       {/* Composer */}
-      <div className="mt-3 flex gap-3">
+      <div className="answer-row mt-3">
         <textarea
           ref={inputRef}
           value={value}
@@ -268,10 +276,17 @@ export function WritingChatSession() {
               send()
             }
           }}
-          placeholder="Type in English — Shift+Enter for a new line."
+          /* The keyboard instruction is dropped on touch devices, where
+             there is no Enter to press and no Shift to hold. */
+          placeholder={
+            coarsePointer
+              ? 'Type in English…'
+              : 'Type in English — Shift+Enter for a new line.'
+          }
           rows={2}
-          className="input flex-1 resize-none text-base"
+          className="input resize-none text-base"
           disabled={state.sending}
+          {...noAutofill}
         />
         <button
           onClick={send}
