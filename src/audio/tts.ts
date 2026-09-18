@@ -53,8 +53,42 @@ export async function pickDefaultVoice(): Promise<SpeechSynthesisVoice | null> {
   return voices[0]
 }
 
+/**
+ * Pick an Australian-accented voice, if this browser/OS ships one.
+ *
+ * Coverage varies a lot: Edge on Windows usually has a Microsoft neural
+ * `en-AU` voice, some Chrome/OS combinations expose a Google `en-AU`
+ * voice, and Brave typically exposes only a couple of generic voices with
+ * no locale to filter on at all. Returning null (rather than throwing) is
+ * the expected outcome on any of those — callers fall back to the normal
+ * default voice.
+ */
+export async function pickAustralianVoice(): Promise<SpeechSynthesisVoice | null> {
+  const voices = await listEnglishVoices()
+  if (voices.length === 0) return null
+
+  const neuralAu = voices.find(
+    (v) => v.lang.toLowerCase() === 'en-au' && /microsoft/i.test(v.name) && /neural|natural/i.test(v.name),
+  )
+  if (neuralAu) return neuralAu
+
+  const googleAu = voices.find((v) => v.lang.toLowerCase() === 'en-au' && /google/i.test(v.name))
+  if (googleAu) return googleAu
+
+  const anyAu = voices.find((v) => v.lang.toLowerCase() === 'en-au')
+  if (anyAu) return anyAu
+
+  // A handful of engines only mark the accent in the voice name, not the locale.
+  const namedAu = voices.find((v) => /australia/i.test(v.name))
+  if (namedAu) return namedAu
+
+  return null
+}
+
 export interface SpeakOptions {
   voiceURI?: string
+  /** Prefer an Australian-accented voice when one is available (falls back silently). */
+  preferAustralian?: boolean
   rate?: number // 0.1..10, default 1
   pitch?: number // 0..2, default 1
   volume?: number // 0..1, default 1
@@ -71,7 +105,8 @@ export async function speak(text: string, opts: SpeakOptions = {}): Promise<void
   const voices = cachedVoices.length ? cachedVoices : await loadVoices()
 
   let chosen: SpeechSynthesisVoice | null = null
-  if (opts.voiceURI) {
+  if (opts.preferAustralian) chosen = await pickAustralianVoice()
+  if (!chosen && opts.voiceURI) {
     chosen = voices.find((v) => v.voiceURI === opts.voiceURI) ?? null
   }
   if (!chosen) chosen = await pickDefaultVoice()

@@ -20,7 +20,6 @@ import {
   type DeckSummary,
 } from '@/db/queries'
 import { getTodayLog } from '@/utils/dailyLog'
-import { shouldRemind } from '@/utils/streakReminder'
 import { allowedLevelsFor } from '@/utils/levelFilter'
 import {
   Badge,
@@ -51,7 +50,6 @@ function readFavorites(): Set<string> {
 
 export function DashboardPage() {
   const stats = useAppStore((s) => s.stats)
-  const settings = useAppStore((s) => s.settings)
   const sessionReviews = useAppStore((s) => s.session.reviewsDone)
 
   const [deck, setDeck] = useState<DeckSummary | null>(null)
@@ -96,7 +94,6 @@ export function DashboardPage() {
   }
 
   const firstName = stats.displayName.split(' ')[0]
-  const reminderActive = !!settings && shouldRemind({ settings, stats })
   const emptyDeck = deck.total === 0
 
   return (
@@ -164,25 +161,6 @@ export function DashboardPage() {
             </Link>
           </Card>
         </motion.section>
-      )}
-
-      {/* ---- Streak nudge ---------------------------------------------- */}
-      {reminderActive && !emptyDeck && (
-        <Card padding="sm" className="flex flex-wrap items-center justify-between gap-4 border-warning/40">
-          <div className="flex items-start gap-3">
-            <Flame size={20} className="mt-0.5 shrink-0 text-warning" />
-            <div>
-              <div className="font-display text-base font-semibold text-text">
-                {stats.currentStreak > 0
-                  ? `Your ${stats.currentStreak}-day streak needs today.`
-                  : 'A few minutes today and the streak begins.'}
-              </div>
-              <div className="text-sm text-text-muted">
-                One session is enough to keep the rhythm.
-              </div>
-            </div>
-          </div>
-        </Card>
       )}
 
       {/* ---- Today's goal ---------------------------------------------- */}

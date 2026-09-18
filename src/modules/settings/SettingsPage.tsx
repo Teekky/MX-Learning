@@ -156,6 +156,22 @@ export function SettingsPage() {
         </button>
       </section>
 
+      {/* Aussie accent */}
+      <section className="card space-y-3">
+        <Label>Aussie module accent</Label>
+        <Toggle
+          checked={settings.aussieAccent ?? true}
+          onChange={(v) => updateSettings({ aussieAccent: v })}
+          label="Use an Australian-accented voice in the Aussie module"
+        />
+        <p className="text-xs text-text-subtle">
+          Falls back to your normal voice above when the browser has no
+          Australian voice available. Coverage varies a lot: Chrome
+          typically offers a small, fixed set of Google voices with no
+          Australian option; Brave often exposes no voice choice at all.
+        </p>
+      </section>
+
       {/* Daily goal */}
       <section className="card space-y-3">
         <Label>Daily XP goal</Label>
@@ -173,43 +189,6 @@ export function SettingsPage() {
           className="input w-32"
           {...noAutofill}
         />
-      </section>
-
-      {/* Streak reminder */}
-      <section className="card space-y-4">
-        <Label>Streak reminder</Label>
-        <Toggle
-          checked={!!settings.reminderEnabled}
-          onChange={(v) => updateSettings({ reminderEnabled: v })}
-          label="Show a dashboard banner if I haven't practiced yet today"
-        />
-        {settings.reminderEnabled && (
-          <div className="flex flex-wrap items-end gap-4">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-text-muted">Reminder hour</span>
-              <input
-                type="number"
-                min={6}
-                max={23}
-                step={1}
-                value={settings.reminderHour ?? 20}
-                onChange={(e) => {
-                  const v = Math.max(
-                    6,
-                    Math.min(23, Number(e.target.value) || 20),
-                  )
-                  void updateSettings({ reminderHour: v })
-                }}
-                className="input w-24"
-                {...noAutofill}
-              />
-            </label>
-            <p className="max-w-xs text-xs text-text-subtle">
-              Local time. The banner appears on the dashboard from this hour
-              onward, until you've earned XP today.
-            </p>
-          </div>
-        )}
       </section>
 
       {/* CEFR level */}

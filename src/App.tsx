@@ -34,6 +34,9 @@ import { bootstrapDatabase } from '@/db/database'
 const OnboardingPage = lazyWithReload(() =>
   import('@/modules/onboarding/OnboardingPage').then((m) => ({ default: m.OnboardingPage })),
 )
+const LevelCheckPage = lazyWithReload(() =>
+  import('@/modules/onboarding/LevelCheckPage').then((m) => ({ default: m.LevelCheckPage })),
+)
 const PracticeSessionPage = lazyWithReload(() =>
   import('@/modules/practice/PracticeSessionPage').then((m) => ({
     default: m.PracticeSessionPage,
@@ -51,7 +54,27 @@ const ProfilePage = lazyWithReload(() =>
 const SettingsPage = lazyWithReload(() =>
   import('@/modules/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 )
-import { autoSnapshot } from '@/utils/backup'
+const AussiePage = lazyWithReload(() =>
+  import('@/modules/aussie/AussiePage').then((m) => ({ default: m.AussiePage })),
+)
+const AussieDomainHub = lazyWithReload(() =>
+  import('@/modules/aussie/AussieDomainHub').then((m) => ({ default: m.AussieDomainHub })),
+)
+const AussieLearnSession = lazyWithReload(() =>
+  import('@/modules/aussie/AussieLearnSession').then((m) => ({
+    default: m.AussieLearnSession,
+  })),
+)
+const AussiePartQuizSession = lazyWithReload(() =>
+  import('@/modules/aussie/AussiePartQuizSession').then((m) => ({
+    default: m.AussiePartQuizSession,
+  })),
+)
+const AussieContextSession = lazyWithReload(() =>
+  import('@/modules/aussie/AussieContextSession').then((m) => ({
+    default: m.AussieContextSession,
+  })),
+)
 import { useAppStore } from '@/store/useAppStore'
 
 function App() {
@@ -63,13 +86,6 @@ function App() {
   useEffect(() => {
     bootstrapDatabase()
       .then(hydrate)
-      .then(() => {
-        /* Safety net: keep a rolling backup in a separate IndexedDB so a
-           wipe of the main database is recoverable. Self-throttled to at
-           most one snapshot per six hours, and failures are swallowed —
-           a backup must never be able to break the app. */
-        void autoSnapshot()
-      })
       .catch((err: unknown) => {
         /* IndexedDB blocked (private window, Brave shields, quota) — without
            this the app hangs on "Booting…" forever with no explanation. */
@@ -169,6 +185,17 @@ function App() {
             onboardingDone ? <ReviewPage /> : <Navigate to="/onboarding" replace />
           }
         />
+        {/* Retake of the placement test — same full-screen treatment as onboarding. */}
+        <Route
+          path="/level-check"
+          element={
+            onboardingDone ? (
+              <LevelCheckPage />
+            ) : (
+              <Navigate to="/onboarding" replace />
+            )
+          }
+        />
         <Route element={<Layout />}>
           <Route
             index
@@ -184,6 +211,17 @@ function App() {
           <Route path="practice/:mode" element={<PracticeSessionPage />} />
           <Route path="deck" element={<DeckPage />} />
           <Route path="idioms" element={<IdiomsPage />} />
+          <Route path="aussie" element={<AussiePage />} />
+          <Route path="aussie/:domainId" element={<AussieDomainHub />} />
+          <Route path="aussie/:domainId/learn" element={<AussieLearnSession />} />
+          <Route
+            path="aussie/:domainId/quiz/:partIndex"
+            element={<AussiePartQuizSession />}
+          />
+          <Route
+            path="aussie/:domainId/context/:partIndex"
+            element={<AussieContextSession />}
+          />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

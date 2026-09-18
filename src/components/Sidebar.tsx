@@ -9,6 +9,7 @@
 import { motion } from 'framer-motion'
 import {
   ChevronLeft,
+  Flag,
   Home,
   Layers,
   Quote,
@@ -33,6 +34,7 @@ const ENTRIES: NavEntry[] = [
   { to: '/practice', label: 'Practice', Icon: Sparkles },
   { to: '/deck', label: 'My Deck', Icon: Layers },
   { to: '/idioms', label: 'Idioms', Icon: Quote },
+  { to: '/aussie', label: 'Aussie', Icon: Flag },
   { to: '/profile', label: 'Profile', Icon: User },
   { to: '/settings', label: 'Settings', Icon: Settings },
 ]

@@ -10,13 +10,17 @@
  *   - achievements: unlock state
  *   - tags: hierarchical tagging
  *   - settings: singleton — theme, sound, voice
+ *   - levelChecks: history of CEFR placement/retake results
+ *   - aussieProgress: per-domain progress for the Aussie module
  */
 
 import Dexie, { type Table } from 'dexie'
 import { DB_NAME, IS_DEMO } from '@/config'
 import type {
   Achievement,
+  AussieProgress,
   DailyLog,
+  LevelCheck,
   Review,
   Settings,
   SRSCard,
@@ -34,6 +38,8 @@ class MXDatabase extends Dexie {
   achievements!: Table<Achievement, string>
   tags!: Table<Tag, number>
   settings!: Table<Settings, number>
+  levelChecks!: Table<LevelCheck, number>
+  aussieProgress!: Table<AussieProgress, string>
 
   constructor() {
     // `mx-learning` in production, `mx-learning-demo` in staging. See src/config.ts.
@@ -56,6 +62,18 @@ class MXDatabase extends Dexie {
     // re-indexed in place by Dexie, no data is rewritten or lost.
     this.version(2).stores({
       words: '++id, lemma, level, *tags, frequencyRank, source, addedAt, partOfSpeech',
+    })
+
+    // v3 — `levelChecks`: one row per completed placement/retake test, so
+    // progress over time (level, score) can be charted in the profile.
+    this.version(3).stores({
+      levelChecks: '++id, date',
+    })
+
+    // v4 — `aussieProgress`: one row per Aussie-module domain (mining, farm
+    // work, …), tracking completion separately from the main deck.
+    this.version(4).stores({
+      aussieProgress: 'domainId',
     })
   }
 }
@@ -91,8 +109,7 @@ const DEFAULT_SETTINGS: Settings = {
   voicePitch: 1,
   difficultyOffset: 0,
   onboardingComplete: false,
-  reminderEnabled: false,
-  reminderHour: 20, // 8 pm — late enough to know if the user did their day, early enough to act
+  aussieAccent: true,
 }
 
 /**

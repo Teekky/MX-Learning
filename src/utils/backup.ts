@@ -9,10 +9,13 @@
  *
  *   1. `exportSnapshot()` serialises every table into a single JSON document.
  *   2. `downloadBackup()` hands that document to the user as a file.
- *   3. `autoSnapshot()` keeps the last few snapshots in a SEPARATE IndexedDB
- *      database, so a corrupted/wiped main DB doesn't take the backups down
- *      with it. It runs once per app load and is deliberately cheap.
- *   4. `importSnapshot()` reads a document back with strict validation.
+ *   3. `importSnapshot()` reads a document back with strict validation.
+ *
+ * There used to be a rolling automatic snapshot on every app load, kept in a
+ * separate IndexedDB database. It was retired — it cost storage for little
+ * benefit once the manual export/import above existed. `clearSnapshots()`
+ * only cleans up whatever that old mechanism already left on a device; it
+ * never touches the current deck.
  *
  * Import threat model
  * -------------------
@@ -402,10 +405,8 @@ export function validateSettings(raw: unknown): Settings | null {
   if (voiceURI) settings.voiceURI = voiceURI
   const onboardingComplete = bool(raw.onboardingComplete)
   if (onboardingComplete != null) settings.onboardingComplete = onboardingComplete
-  const reminderEnabled = bool(raw.reminderEnabled)
-  if (reminderEnabled != null) settings.reminderEnabled = reminderEnabled
-  const reminderHour = int(raw.reminderHour, { min: 0, max: 23 })
-  if (reminderHour != null) settings.reminderHour = reminderHour
+  const aussieAccent = bool(raw.aussieAccent)
+  if (aussieAccent != null) settings.aussieAccent = aussieAccent
   return settings
 }
 
@@ -638,14 +639,13 @@ export async function importSnapshot(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Rolling auto-snapshot (separate database)                          */
+/*  Legacy snapshot vault — cleanup only, nothing writes here anymore  */
 /* ------------------------------------------------------------------ */
 
 interface StoredSnapshot {
   id?: number
   createdAt: number
   sourceDb: string
-  /** The serialised BackupFile. Stored as text so it can be re-downloaded verbatim. */
   json: string
   bytes: number
   wordCount: number
@@ -656,18 +656,13 @@ class BackupVault extends Dexie {
 
   constructor() {
     // Deliberately a DIFFERENT IndexedDB database from the main one, so
-    // wiping/corrupting `mx-learning` doesn't take the backups with it.
+    // clearing it can never touch `mx-learning` / `mx-learning-demo`.
     super('mx-learning-backups')
     this.version(1).stores({ snapshots: '++id, createdAt, sourceDb' })
   }
 }
 
-export const vault = new BackupVault()
-
-/** How many snapshots to keep per source database. */
-const KEEP_SNAPSHOTS = 5
-/** Don't take a fresh snapshot if the newest one is younger than this. */
-const SNAPSHOT_MIN_AGE_MS = 6 * 60 * 60 * 1000 // 6 h
+const vault = new BackupVault()
 
 export interface SnapshotMeta {
   id: number
@@ -677,61 +672,7 @@ export interface SnapshotMeta {
   wordCount: number
 }
 
-/**
- * Take a snapshot on app load if the newest one is stale.
- *
- * Safe to call unconditionally: it never throws (a failed backup must not
- * break the app), and it self-throttles so a user who opens the app twenty
- * times a day doesn't accumulate twenty copies.
- */
-export async function autoSnapshot(): Promise<SnapshotMeta | null> {
-  try {
-    const sourceDb = db.name
-    const latest = await vault.snapshots
-      .where('sourceDb')
-      .equals(sourceDb)
-      .reverse()
-      .sortBy('createdAt')
-      .then((rows) => rows[0])
-
-    if (latest && Date.now() - latest.createdAt < SNAPSHOT_MIN_AGE_MS) return null
-
-    const snapshot = await exportSnapshot()
-    // Nothing to protect yet — skip so a fresh install doesn't store an
-    // empty file that would later "win" over a real one.
-    if (snapshot.words.length === 0 && snapshot.reviews.length === 0) return null
-
-    const json = JSON.stringify(snapshot)
-    const row: StoredSnapshot = {
-      createdAt: Date.now(),
-      sourceDb,
-      json,
-      bytes: new Blob([json]).size,
-      wordCount: snapshot.words.length,
-    }
-    const id = await vault.snapshots.add(row)
-
-    // Prune the tail.
-    const all = await vault.snapshots.where('sourceDb').equals(sourceDb).sortBy('createdAt')
-    const excess = all.slice(0, Math.max(0, all.length - KEEP_SNAPSHOTS))
-    if (excess.length > 0) {
-      await vault.snapshots.bulkDelete(excess.map((s) => s.id!).filter((x) => x != null))
-    }
-
-    return {
-      id,
-      createdAt: row.createdAt,
-      sourceDb,
-      bytes: row.bytes,
-      wordCount: row.wordCount,
-    }
-  } catch (err) {
-    console.warn('[MX Learning] auto-snapshot skipped:', err)
-    return null
-  }
-}
-
-/** List stored snapshots (metadata only — the JSON payload is not loaded). */
+/** List whatever the old auto-snapshot mechanism already left on this device. */
 export async function listSnapshots(sourceDb = db.name): Promise<SnapshotMeta[]> {
   try {
     const rows = await vault.snapshots.where('sourceDb').equals(sourceDb).sortBy('createdAt')
@@ -749,30 +690,14 @@ export async function listSnapshots(sourceDb = db.name): Promise<SnapshotMeta[]>
   }
 }
 
-/** Download a previously stored snapshot as a file. */
-export async function downloadSnapshot(id: number): Promise<boolean> {
-  const row = await vault.snapshots.get(id)
-  if (!row) return false
-  const blob = new Blob([row.json], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = backupFilename(row.sourceDb)
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 1_000)
-  return true
-}
-
-/** Restore a stored snapshot back into the main database. */
-export async function restoreSnapshot(
-  id: number,
-  mode: ImportMode = 'replace',
-): Promise<ImportReport> {
-  const row = await vault.snapshots.get(id)
-  if (!row) {
-    return { ok: false, error: 'Snapshot not found.', accepted: {}, rejected: {} }
-  }
-  return importSnapshot(row.json, mode)
+/**
+ * Delete every stored snapshot for this database from the legacy vault.
+ * Only ever touches `mx-learning-backups` — the live deck is untouched.
+ * Returns how many rows were removed.
+ */
+export async function clearSnapshots(sourceDb = db.name): Promise<number> {
+  const rows = await vault.snapshots.where('sourceDb').equals(sourceDb).toArray()
+  if (rows.length === 0) return 0
+  await vault.snapshots.bulkDelete(rows.map((r) => r.id!).filter((x) => x != null))
+  return rows.length
 }

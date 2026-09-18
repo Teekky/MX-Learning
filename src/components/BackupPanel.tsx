@@ -3,31 +3,35 @@
  *
  * Everything you have learned lives in one IndexedDB database in one browser
  * profile. Clearing site data wipes it, and there is no server copy. This
- * panel is the answer to that: an export you can put somewhere safe, an
- * import that validates every record before it touches the database, and a
- * list of the rolling snapshots the app takes for you automatically.
+ * panel is the answer to that: an export you can put somewhere safe, and an
+ * import that validates every record before it touches the database.
  *
  * Restores are destructive in one direction only — "replace" is behind an
  * explicit confirmation, and merging is the default.
+ *
+ * The app used to also take an automatic rolling snapshot on every load,
+ * stored in a separate IndexedDB database. That was retired — the manual
+ * export above already covers the same need without silently growing
+ * storage in the background. `Stored backups` below is cleanup only: it
+ * lists and clears whatever that old mechanism already left on this
+ * device, and never touches the current deck.
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { Download, RotateCcw, Upload } from 'lucide-react'
+import { Download, Trash2, Upload } from 'lucide-react'
 import {
   Button,
   Card,
   Notice,
   Select,
   Spinner,
-  cn,
 } from '@/components/ui'
 import {
+  clearSnapshots,
   downloadBackup,
-  downloadSnapshot,
   importSnapshot,
   listSnapshots,
   parseBackup,
-  restoreSnapshot,
   type ImportMode,
   type ImportReport,
   type SnapshotMeta,
@@ -46,7 +50,7 @@ export function BackupPanel() {
   const fileInput = useRef<HTMLInputElement>(null)
   const [snapshots, setSnapshots] = useState<SnapshotMeta[] | null>(null)
   const [mode, setMode] = useState<ImportMode>('merge')
-  const [busy, setBusy] = useState<'export' | 'import' | 'restore' | null>(null)
+  const [busy, setBusy] = useState<'export' | 'import' | 'clear-snapshots' | null>(null)
   const [report, setReport] = useState<ImportReport | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -127,24 +131,29 @@ export function BackupPanel() {
     }
   }
 
-  async function handleRestore(snapshot: SnapshotMeta) {
+  async function handleClearSnapshots() {
+    if (!snapshots || snapshots.length === 0) return
+    const totalBytes = snapshots.reduce((n, s) => n + s.bytes, 0)
     const confirmed = window.confirm(
-      `Restore the snapshot from ${formatWhen(snapshot.createdAt)}?\n\n` +
-        `It contains ${snapshot.wordCount} words and will replace the current contents of "${db.name}".`,
+      `Delete ${snapshots.length} stored backup${snapshots.length === 1 ? '' : 's'} ` +
+        `(${formatBytes(totalBytes)}) from this device?\n\n` +
+        `This only clears old automatic snapshots — your current deck is not touched. Cannot be undone.`,
     )
     if (!confirmed) return
 
-    setBusy('restore')
+    setBusy('clear-snapshots')
     setError(null)
     try {
-      const result = await restoreSnapshot(snapshot.id, 'replace')
-      setReport(result)
-      if (result.ok) {
-        await hydrate()
-        pushToast({ kind: 'info', icon: '↺', title: 'Snapshot restored' })
-      } else {
-        setError(result.error ?? 'Restore failed.')
-      }
+      const removed = await clearSnapshots()
+      setSnapshots([])
+      pushToast({
+        kind: 'info',
+        icon: '🗑',
+        title: 'Stored backups deleted',
+        body: `${removed} snapshot${removed === 1 ? '' : 's'} removed.`,
+      })
+    } catch {
+      setError('Could not delete the stored backups. Try again in a moment.')
     } finally {
       setBusy(null)
     }
@@ -230,67 +239,37 @@ export function BackupPanel() {
         </p>
       </div>
 
-      {/* ---- Automatic snapshots --------------------------------------- */}
-      <div className="space-y-3 border-t-hair border-border-subtle pt-5">
-        <div>
-          <h3 className="font-display text-base font-semibold text-text">
-            Automatic snapshots
-          </h3>
-          <p className="mt-1 text-sm text-text-muted">
-            Taken on launch, at most once every six hours, and kept in a
-            separate database so a wipe of your deck does not take them too.
-          </p>
+      {/* ---- Stored backups (legacy auto-snapshot cleanup) ------------- */}
+      {snapshots == null ? null : snapshots.length > 0 ? (
+        <div className="space-y-3 border-t-hair border-border-subtle pt-5">
+          <div>
+            <h3 className="font-display text-base font-semibold text-text">
+              Stored backups
+            </h3>
+            <p className="mt-1 text-sm text-text-muted">
+              Left over from an automatic snapshot feature that has been
+              retired. Deleting these only frees up space on this device —
+              your current deck is not touched.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-text-muted">
+              {snapshots.length} snapshot{snapshots.length === 1 ? '' : 's'} ·{' '}
+              {formatBytes(snapshots.reduce((n, s) => n + s.bytes, 0))}
+            </p>
+            <Button
+              variant="ghost"
+              onClick={() => void handleClearSnapshots()}
+              disabled={busy !== null}
+              leading={
+                busy === 'clear-snapshots' ? <Spinner size={16} /> : <Trash2 size={18} />
+              }
+            >
+              Delete stored backups
+            </Button>
+          </div>
         </div>
-
-        {snapshots == null ? (
-          <Spinner />
-        ) : snapshots.length === 0 ? (
-          <p className="text-sm text-text-subtle">
-            None yet — the first one is taken once there is something worth
-            protecting.
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {snapshots.map((s) => (
-              <li
-                key={s.id}
-                className={cn(
-                  'flex flex-wrap items-center justify-between gap-3 rounded-lg',
-                  'border-hair border-border bg-bg-subtle px-4 py-3',
-                )}
-              >
-                <div className="min-w-0">
-                  <div className="text-sm font-medium text-text">
-                    {formatWhen(s.createdAt)}
-                  </div>
-                  <div className="font-mono text-xs text-text-subtle">
-                    {s.wordCount} words · {formatBytes(s.bytes)}
-                  </div>
-                </div>
-                <div className="flex shrink-0 gap-2">
-                  <Button
-                    size="sm"
-                    variant="quiet"
-                    onClick={() => void downloadSnapshot(s.id)}
-                    leading={<Download size={16} />}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => void handleRestore(s)}
-                    disabled={busy !== null}
-                    leading={<RotateCcw size={16} />}
-                  >
-                    Restore
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      ) : null}
     </Card>
   )
 }
@@ -301,12 +280,4 @@ function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
-}
-
-function formatWhen(ts: number): string {
-  // English, like the rest of the interface — see the note in DashboardPage.
-  return new Date(ts).toLocaleString('en-GB', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
 }
